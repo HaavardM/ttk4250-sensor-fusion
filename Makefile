@@ -12,7 +12,3 @@ clean:
 	rm -rf latex/build
 
 .PHONY: clean
-    
-
-        
-	
