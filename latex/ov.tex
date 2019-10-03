@@ -1,0 +1,36 @@
+\documentclass[]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{capt-of}
+\usepackage{listings}
+\usepackage{siunitx}
+\usepackage[section]{placeins}
+
+
+
+% Section numbering %
+\renewcommand\thesection{Task \arabic{section}}
+\renewcommand\thesubsection{\alph{subsection})}
+
+% Proofs
+\newcommand\TombStone{\rule{.5em}{.5em}} % The tombest stone
+\renewcommand\qedsymbol{\TombStone}
+\renewcommand{\proofname}{Proof.} % Nice proof
+
+\title{Interactive Multiple Model Probability Data Association Filter}
+\author{Håvard Mellby \& Sigurd Totland}
+
+\begin{document}
+\maketitle
+
+\include{task1}
+\include{task2}
+\include{task3}
+
+\end{document}
+
