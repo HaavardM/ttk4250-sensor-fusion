@@ -29,17 +29,17 @@ classdef IMM
            %
            % spredprobs (M x 1): predicted mode probabilities
            % smixprobs (M x M): mixing probabilities
-           
+
            % Joint probability for this model and next
-           spsjointprobs = obj.PI .* (ones(obj.M, 1) * sprobs');
-           
+           spsjointprobs = obj.PI .* (ones(obj.M, 1) * sprobs(:)');
+
            % marginal probability for next model
-           spredprobs = spsjointprobs * ones(obj.M, 1);
-           
+           spredprobs = sum(spsjointprobs, 2);
+
            % conditionional probability for model at this time step on the next.
-           smixprobs = spsjointprobs ./ (spredprobs * ones(obj.M, 1)');
+           smixprobs = spsjointprobs ./ (spredprobs * ones(1, obj.M));
        end
-       
+
        function [xmix, Pmix] = mixStates(obj, smixprobs, x, P)
            % IMM: step 2
            % smixprob (M x M): mixing probabilities
