@@ -50,8 +50,8 @@ classdef IMMPDAF
             gated = false(m, 1);
             gSquared = obj.gateSize;
             for j = 1:m
-                [NIS, NISes] = obj.imm.NIS(Z(:,j), sprobs, x, P); 
-                gated(j) = any(NISES < obj.gateSize);
+                [~, NISes] = obj.imm.NIS(Z(:,j), sprobs, x, P); 
+                gated(j) = any(NISes < gSquared);
             end
         end
         
@@ -77,7 +77,7 @@ classdef IMMPDAF
             ll = zeros(m + 1, 1);
             
             % calculate log likelihood ratios
-            ll(1) = % association loglikelihood ratio for no detection
+            ll(1) = logPND + logClutter;% association loglikelihood ratio for no detection
             for j = 1:m
                 [~, ~, ~, llCond(j)] = obj.imm.update(Z(:, j), sprobs, x, P); %... calculate imm loglikelihood
                 ll(j + 1) = logPD + llCond(j);  %... association loglikelihood ratio for detection j
@@ -187,7 +187,7 @@ classdef IMMPDAF
             [sprobscu, xcu, Pcu] = conditionalUpdate(Zg, sprobs, x, P); %...
             
             % reduce mixture
-            [sprobsupd, xupd, Pupd] = reduceMixture(beta, sprobs, x, P); %...
+            [sprobsupd, xupd, Pupd] = reduceMixture(beta, sprobscu, xcu, Pcu); %...
         end
     end
 end
