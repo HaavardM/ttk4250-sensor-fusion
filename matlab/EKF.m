@@ -51,13 +51,12 @@ classdef EKF
             I = eye(size(P));
             Wk = P * Hk'/Sk;
             xupd = x + Wk*vk;
-            Pupd = (I - Wk*Hk)*P*(I - Wk*Hk)' + Wk*obj.R * Wk';
+            Pupd = (I - Wk*Hk)*P*(I - Wk*Hk)' + Wk*obj.R*Wk';
         end
 
         function NIS = NIS(obj, z, x, P)
             % returns the normalized innovation squared
             [vk, Sk] = obj.innovation(z, x, P);
-            
             NIS = vk' * (Sk \ vk);
         end
 
