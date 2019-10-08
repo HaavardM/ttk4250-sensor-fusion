@@ -36,8 +36,8 @@ plot(Xgt(1,:),Xgt(2,:), 'LineWidth',1.5);
 title('True trajectory and the nearby measurements')
 
 %% Task 2p1 (PDAF)
-task2p1;
+%task2p1;
 
 
 %% Task2p2 (IMM-PDAF)
-%task2p2;
+task2p2;
