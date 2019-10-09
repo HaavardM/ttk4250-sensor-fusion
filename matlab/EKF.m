@@ -40,7 +40,7 @@ classdef EKF
             % returns the innovation and innovation covariance
             Hk = obj.H(x);
             vk = z - obj.h(x);
-            Sk = Hk * P * Hk' + obj.R;
+            Sk = Hk * P * Hk' + obj.R(x);
         end
 
         function [xupd, Pupd] = update(obj, z, x, P)
@@ -51,7 +51,7 @@ classdef EKF
             I = eye(size(P));
             Wk = P * Hk'/Sk;
             xupd = x + Wk*vk;
-            Pupd = (I - Wk*Hk)*P*(I - Wk*Hk)' + Wk*obj.R * Wk';
+            Pupd = (I - Wk*Hk)*P*(I - Wk*Hk)' + Wk*obj.R(x) * Wk';
         end
 
         function NIS = NIS(obj, z, x, P)
