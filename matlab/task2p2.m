@@ -1,20 +1,20 @@
 % IMM-PDA
 % sensor
 r = 5;
-lambda = 1e-3;
-PD = 0.9;
-gateSize = 10^2;
+lambda = 1e-6;
+PD = 0.95;
+gateSize = 6^2;
 
 % dynamic models
 qCV = 0.1;
 qCT = [0.005, 0.000025];
 x0 = [0; 0; 2; 0; 0];
-P0 = eye(5);
+P0 = 20*eye(5);
 
 % markov chain (you are free to parametrize this in another way)
-PI11 = 0.95;
-PI22 = 0.95;
-p10 = 0.5;
+PI11 = 0.97;
+PI22 = 0.92;
+p10 = 0.9;
 
 PI = [PI11, (1 - PI22); (1 - PI11), PI22]; assert(all(sum(PI, 1) == [1, 1]),'columns of PI must sum to 1')
 sprobs0 = [p10; (1 - p10)]; assert(sum(sprobs0) == 1, 'initial mode probabilities must sum to 1');

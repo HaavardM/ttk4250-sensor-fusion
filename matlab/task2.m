@@ -1,6 +1,6 @@
 clear all; close all;
 %% Load/generate data
-usePregen = false; % you can generate your own data if set to false
+usePregen = true; % you can generate your own data if set to false
 if usePregen
     load task2data.mat;
 else
