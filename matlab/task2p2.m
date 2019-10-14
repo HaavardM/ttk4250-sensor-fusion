@@ -80,6 +80,8 @@ plot(Xgt(1,:), Xgt(2, :));
 axis('equal')
 title(sprintf('posRMSE = %.3f, velRMSE = %.3f, peakPosDev = %.3f, peakVelDev = %.3f',posRMSE, velRMSE, peakPosDeviation, peakVelDeviation))
 
+plotmodecoloredtrack(xest, probhat, 1);
+
 figure(7); clf; hold on; grid on;
 plot(xest(5,:))
 plot(Xgt(5,:))
