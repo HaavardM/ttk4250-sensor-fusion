@@ -1,4 +1,8 @@
-function [X, Z, a] = simulate_atc_track(Ts, K, q, r, init, PD, lambda, theCase)
+function [X, Z, a] = simulate_atc_track(Ts, K, q, r, init, PD, lambda, theCase, cv, ct)
+
+if (~(cv || ct))
+    throw(MException('meme:meme','Either cv or ct must be true'));
+end
 
 if theCase
     rng('default');
@@ -43,6 +47,9 @@ X(:,1) = xzero;
 z(:,1) = h(X(:,1)) + sqrtR*randn(m,1);
 
 s = 1;
+if (ct && ~cv)
+    s = 2;
+end
 
 for k=2:K
     maxSpeedRatio = (X(3, k)^2 + X(4, k)^2)/(maxSpeed^2);
@@ -54,18 +61,20 @@ for k=2:K
         X(5, k) = maxTurn * sign(X(5));
     end
     
-    if k == 25  %First turn
-        X(5, k - 1) = (pi/2)/(18 * Ts);
-        s = 2;
-    elseif k == 43 %Straight movement
-        X(5, k - 1) = 0;
-        s = 1;
-    elseif k == 68 % second turn
-        X(5, k - 1) = (-2*pi/3)/(15*Ts);
-        s = 2;
-    elseif k == 74 %Straight movement
-        X(5, k - 1) = 0;
-        s = 1;
+    if (cv && ct)
+        if k == 25  %First turn
+            X(5, k - 1) = (pi/2)/(18 * Ts);
+            s = 2;
+        elseif k == 43 %Straight movement
+            X(5, k - 1) = 0;
+            s = 1;
+        elseif k == 68 % second turn
+            X(5, k - 1) = (-2*pi/3)/(15*Ts);
+            s = 2;
+        elseif k == 74 %Straight movement
+            X(5, k - 1) = 0;
+            s = 1;
+        end
     end
     
     X(:,k) = models{s}.f(X(:, k-1), Ts) + models{s}.sqrtQ(X(:, k - 1), Ts) * randn(n,1);

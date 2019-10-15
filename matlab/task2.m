@@ -13,7 +13,7 @@ else
     % detection and false alarm
     PDtrue = 0.9;
     lambdatrue = 1e-4;
-    [Xgt, Z, a] = simulate_atc_track(Ts, K, q, r, init, PDtrue, lambdatrue, false);
+    [Xgt, Z, a] = simulate_atc_track(Ts, K, q, r, init, PDtrue, lambdatrue, false, true, true);
 end
 
 
