@@ -17,9 +17,9 @@ qCVh = 0.05;
 modIdx = 1:3; 
 M = numel(modIdx);
 
-PI = [1  0.05 0.05;
-      0.1  0.9 0.3;
-      0.05 0.9 1];
+PI = [0.8696    0.0270    0.0370
+      0.0870    0.4865    0.2222
+      0.0435    0.4865    0.7407];
   
 PI = PI(modIdx, modIdx); % select the models to use
 PI = PI./sum(PI,1); % be sure to normalize
