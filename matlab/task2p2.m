@@ -76,15 +76,15 @@ ANEES = mean(NEES);
 
 % plot
 if plot_tracked_path
-    figure(6); clf; hold on; grid on;
+    figure(6); clf;
     subplot(2, 1, 1);
-    plot(xest(1,:), xest(2,:));
+    plot(xest(1,:), xest(2,:)); hold on; grid on;
     plot(Xgt(1,:), Xgt(2, :));
     axis('equal')
     title(sprintf('posRMSE = %.3f, velRMSE = %.3f, peakPosDev = %.3f, peakVelDev = %.3f',posRMSE, velRMSE, peakPosDeviation, peakVelDeviation))
-    subplot(2, 1, 2); clf; hold on; grid on;
-    plot(xest(5,:))
-    plot(Xgt(5,:))
+    subplot(2, 1, 2);
+    plot(xest(5,:)); hold on; grid on;
+    plot(Xgt(5,:));
 end
 
 if plot_mode_prob_path
