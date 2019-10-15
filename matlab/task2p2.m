@@ -1,18 +1,18 @@
 % IMM-PDA
 % sensor
 r = 5;
-lambda = 1e-3;
-PD = 0.9;
-gateSize = 10^2;
+lambda = 1e-4;
+PD = 0.95;
+gateSize = 5^2;
 
 % dynamic models
-qCV = 0.1;
-qCT = [0.005, 0.000025];
-x0 = [0; 0; 2; 0; 0];
-P0 = eye(5);
+qCV = 0.0078;
+qCT = [0.02, 0.0005];
+x0 = [0; 0; 2; 0; 0.1];
+P0 = diag([25, 25, 3, 3, 0.0005].^2);
 
 % markov chain (you are free to parametrize this in another way)
-PI11 = 0.95;
+PI11 = 0.90;
 PI22 = 0.95;
 p10 = 0.5;
 
@@ -76,15 +76,15 @@ ANEES = mean(NEES);
 
 % plot
 if plot_tracked_path
-    figure(6); clf; hold on; grid on;
+    figure(6); clf;
     subplot(2, 1, 1);
-    plot(xest(1,:), xest(2,:));
+    plot(xest(1,:), xest(2,:)); hold on; grid on;
     plot(Xgt(1,:), Xgt(2, :));
     axis('equal')
     title(sprintf('posRMSE = %.3f, velRMSE = %.3f, peakPosDev = %.3f, peakVelDev = %.3f',posRMSE, velRMSE, peakPosDeviation, peakVelDeviation))
-    subplot(2, 1, 2); clf; hold on; grid on;
-    plot(xest(5,:))
-    plot(Xgt(5,:))
+    subplot(2, 1, 2);
+    plot(xest(5,:)); hold on; grid on;
+    plot(Xgt(5,:));
 end
 
 if plot_mode_prob_path

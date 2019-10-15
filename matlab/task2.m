@@ -1,4 +1,7 @@
 clear all; close all;
+
+addpath('./plotfuncs');
+
 %% Load/generate data
 usePregen = false; % you can generate your own data if set to false
 if usePregen
