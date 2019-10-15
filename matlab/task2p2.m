@@ -1,18 +1,18 @@
 % IMM-PDA
 % sensor
 r = 5;
-lambda = 1e-3;
-PD = 0.8;
+lambda = 1e-4;
+PD = 0.95;
 gateSize = 5^2;
 
 % dynamic models
-qCV = 0.0025;
-qCT = [0.005, 0.0005];
-x0 = [0; 0; 2; 0; 0];
+qCV = 0.0078;
+qCT = [0.02, 0.0005];
+x0 = [0; 0; 2; 0; 0.1];
 P0 = diag([25, 25, 3, 3, 0.0005].^2);
 
 % markov chain (you are free to parametrize this in another way)
-PI11 = 0.95;
+PI11 = 0.90;
 PI22 = 0.95;
 p10 = 0.5;
 

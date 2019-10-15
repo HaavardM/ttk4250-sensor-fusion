@@ -1,13 +1,13 @@
 % Look at individual EKF-PDAs
-r = 10;
-qCV = 1.0;
-qCT = [6.5, 6.5];
+r = 5;
+qCV = 0.0079;
+qCT = [0.02, 0.0005];
 
-lambda = 1e-3;
-PD = 0.8;
+lambda = 1e-4;
+PD = 0.95;
 gateSize = 5^2;
 % choose model to tune
-s = 1;
+s = 2;
 
 % make models
 models =  cell(2,1);
