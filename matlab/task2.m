@@ -1,6 +1,9 @@
 clear all; close all;
+
+addpath('./plotfuncs');
+
 %% Load/generate data
-usePregen = true; % you can generate your own data if set to false
+usePregen = false; % you can generate your own data if set to false
 if usePregen
     load task2data.mat;
 else
