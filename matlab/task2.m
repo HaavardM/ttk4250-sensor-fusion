@@ -16,24 +16,35 @@ else
     [Xgt, Z, a] = simulate_atc_track(Ts, K, q, r, init, PDtrue, lambdatrue, false, true, true);
 end
 
+%% Enable/Disable plots
+plot_true_path = false;
+plot_tracked_path = false;
+plot_mode_prob = false;
+plot_mode_prob_path = true;
+plot_NEES = false;
+plot_error = false;
+plot_movie = false;
 
-%% plot measurements close to the trajectory
-figure(1); clf; hold on; grid on;
-Zplotdata = [];
-plotMeasDist = 45;
-for k = 1:K
-   toPlot = false(size(Z{k},2),1);
-   for j = 1:size(Z{k}, 2)
-        v = Z{k}(:, j) - Xgt(1:2, k);
-        toPlot(j) = v' * v <= plotMeasDist^2;
-   end
-   Zplotdata = [Zplotdata, Z{k}(:, toPlot)];
+if plot_true_path
+    %% plot measurements close to the trajectory
+    figure(1); clf; hold on; grid on;
+    Zplotdata = [];
+    plotMeasDist = 45;
+    for k = 1:K
+       toPlot = false(size(Z{k},2),1);
+       for j = 1:size(Z{k}, 2)
+            v = Z{k}(:, j) - Xgt(1:2, k);
+            toPlot(j) = v' * v <= plotMeasDist^2;
+       end
+       Zplotdata = [Zplotdata, Z{k}(:, toPlot)];
+    end
+    set(gca, 'ColorOrderIndex', 2)
+    scatter(Zplotdata(1,:), Zplotdata(2,:));
+    set(gca, 'ColorOrderIndex', 1)
+    plot(Xgt(1,:),Xgt(2,:), 'LineWidth',1.5);
+    title('True trajectory and the nearby measurements')
 end
-set(gca, 'ColorOrderIndex', 2)
-scatter(Zplotdata(1,:), Zplotdata(2,:));
-set(gca, 'ColorOrderIndex', 1)
-plot(Xgt(1,:),Xgt(2,:), 'LineWidth',1.5);
-title('True trajectory and the nearby measurements')
+
 
 %% Task 2p1 (PDAF)
 %task2p1;
