@@ -88,7 +88,7 @@ if plot_tracked_path
 end
 
 if plot_mode_prob_path
-    plotmodecoloredtrack(xest, probhat, 1);
+    plotmodecoloredtrack(xest, probhat, 1, 67);
 end
 
 
