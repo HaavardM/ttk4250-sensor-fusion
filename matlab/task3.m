@@ -5,15 +5,15 @@ addpath('./plotfuncs');
 %% Parameters
 fignum = 1;
 
-r = 6;
+r = 100;
 lambda = 1e-4;
 PD = 0.95;
 gateSize = 5^2;
 
 % dynamic models
-qCV = 3;
-qCT = [5, 0.000005];
-qCVh = 50;
+qCV = 4;
+qCT = [5.5, 0.000005];
+qCVh = 100;
 modIdx = 1:3; 
 M = numel(modIdx);
 PI = [0.95    0.025    0.025
