@@ -8,8 +8,8 @@ p_std = [..., ..., ...]'; % Measurement noise
 RGNSS = diag(p_std.^2);
 
 % accelerometer
-qA = ...^2; % accelerometer measurement noise covariance
-qAb = ...^2; % accelerometer bias driving noise covariance
+qA = 0.25^2; % accelerometer measurement noise covariance
+qAb = 3600^2; % accelerometer bias driving noise covariance
 pAcc = ...; % accelerometer bias reciprocal time constant
 
 qG = ...^2; % gyro measurement noise covariance
