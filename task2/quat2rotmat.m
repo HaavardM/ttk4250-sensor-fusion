@@ -1,7 +1,10 @@
 function R = quat2rotmat(quat)  
+    thresh = 1e-6;
+    if abs(norm(quat)-1)>thresh; error('input must be a unit quaternion'); end
+
     eta = quat(1);
-    e = quat(2:4);
-    S = crossProdMat(e);
-    
-    R = %
+    eps = quat(2:4);
+
+    S = crossProdMat(eps);
+    R = eye(3) + 2*eta*S + 2*S^2;
 end
