@@ -1,20 +1,21 @@
+close all; clear all;
 load task_simulation.mat;
 dt = mean(diff(timeIMU));
 steps = size(zAcc,2);
 
 %% Measurement noise
 % GNSS Position  measurement
-p_std = [..., ..., ...]'; % Measurement noise
+p_std = [1, 1, 1]'; % Measurement noise
 RGNSS = diag(p_std.^2);
 
 % accelerometer
-qA = 0.25^2; % accelerometer measurement noise covariance
-qAb = 3600^2; % accelerometer bias driving noise covariance
-pAcc = ...; % accelerometer bias reciprocal time constant
+qA = 0.001;% accelerometer measurement noise covariance
+qAb = 50; % accelerometer bias driving noise covariance
+pAcc = 0; % accelerometer bias reciprocal time constant
 
-qG = ...^2; % gyro measurement noise covariance
-qGb = ...^2;  % gyro bias driving noise covariance
-pGyro = ...; % gyrp bias reciprocal time constant
+qG = 0.01; % gyro measurement noise covariance
+qGb = 0.3/3600;  % gyro bias driving noise covariance
+pGyro = 0; % gyrp bias reciprocal time constant
 
 
 %% Estimator
@@ -28,25 +29,24 @@ Pest = zeros(15, 15, steps);
 
 xpred = zeros(16, steps);
 Ppred = zeros(15, 15, steps);
-
 %% initialize
 xpred(1:3, 1) = [0, 0, -5]'; % starting 5 meters above ground
 xpred(4:6, 1) = [20, 0, 0]'; % starting at 20 m/s due north
 xpred(7, 1) = 1; % no initial rotation: nose to north, right to East and belly down.
 
-Ppred(1:3, 1:3, 1) = ...; 
-Ppred(4:6, 4:6, 1) = ...;
-Ppred(7:9, 7:9, 1) = ...; % error rotation vector (not quat)
-Ppred(10:12, 10:12, 1) = ...;
-Ppred(13:15, 13:15, 1) = ...;
+Ppred(1:3, 1:3, 1) = eye(3); 
+Ppred(4:6, 4:6, 1) = eye(3);
+Ppred(7:9, 7:9, 1) = eye(3); % error rotation vector (not quat)
+Ppred(10:12, 10:12, 1) = eye(3);
+Ppred(13:15, 13:15, 1) = eye(3);
 
 %% run
 N = 90000;
 GNSSk = 1;
 for k = 1:N
     if  timeIMU(k) >= timeGNSS(GNSSk)
-        NIS(GNSSk) = ...;
-        [xest(:, k), Pest(:, :, k)] = ...;
+        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
+        [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
         GNSSk = GNSSk  + 1;
         
         % sanity check, remove for some minor speed
@@ -55,16 +55,16 @@ for k = 1:N
         end
         
     else % no updates so estimate = prediction
-        xest(:, k) = ... ;
-        Pest(:, :, k) = ... ;
+        xest(:, k) = xpred(:, k) ;
+        Pest(:, :, k) = Ppred(:, :, k) ;
     end
     
-    deltaX(:, k) = ...;
+    deltaX(:, k) = eskf.deltaX(xest(:, k), xtrue(:, k));
     [NEES(:, k), NEESpos(:, k), NEESvel(:, k), NEESatt(:, k), NEESaccbias(:, k), NEESgyrobias(:, k)] = ...
-        ...;
+        eskf.NEES(xest(:, k), Pest(:, :,  k), xtrue(:, k));
     
     if k < N
-        [xpred(:, k+1),  Ppred(:, :, k+1)] = ...;
+        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k), zGyro(:, k), dt);
         % sanity check, remove for speed
         if any(any(~isfinite(Ppred(:, :, k + 1))))
            error('not finite Ppred at time %d', k + 1)
@@ -73,6 +73,7 @@ for k = 1:N
 end
 
 %% plots
+GNSSk = GNSSk - 1;
 figure(1);
 clf;
 plot3(xest(2, 1:N), xest(1, 1:N), -xest(3, 1:N));
@@ -83,9 +84,15 @@ xlabel('East [m]')
 ylabel('North [m]')
 zlabel('Altitude [m]')
 
+eul = zeros(3, N);
+eul_true = zeros(3, N);
+for i =1:N
+   eul(:, i) = quat2eul(xest(7:10, i));
+   eul_true(:, i) = quat2eul(xtrue(7:10, i));
+end
 % state estimate plot
-eul = quat2eul(xest(7:10, :));
-eul_true = quat2eul(xtrue(7:10, :));
+%eul = cellfun(@(q) quat2eul(q), mat2cell(xest(7:10, :), 1));
+%eul_true = cellfun(@(q) quat2eul(q), mat2cell(xtrue(7:10, :), 1));
 figure(2); clf; hold on;
 
 subplot(5,1,1);
@@ -119,7 +126,7 @@ grid on;
 ylabel('Gyro bias [deg/h]')
 legend('x', 'y', 'z')
 
-suptitle('States estimates');
+%suptitle('States estimates');
 
 % state error plots
 figure(3); clf; hold on;
@@ -164,7 +171,7 @@ legend(sprintf('x (%.3g)', sqrt(mean(((deltaX(13, 1:N))*180/pi).^2))),...
     sprintf('y (%.3g)', sqrt(mean(((deltaX(14, 1:N))*180/pi).^2))),...
     sprintf('z (%.3g)', sqrt(mean(((deltaX(15, 1:N))*180/pi).^2))))
 
-suptitle('States estimate errors');
+%suptitle('States estimate errors');
 
 % error distance plot
 figure(4); clf; hold on;

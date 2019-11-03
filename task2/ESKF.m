@@ -72,14 +72,12 @@ classdef ESKF
             velPred = vel + R * acc*Ts;%
             
             k = Ts*omega;
-            dq = [cos(abs(k) / 2) (sin(abs(k)/2)*k' / abs(k))]';%
-            quatPred = quatProd(quat, dq);%
+            dq = [cos(norm(k) / 2) (sin(norm(k)/2)*k' / norm(k))]';%
+            quatPred = normQuat(quatProd(quat, dq));%
             
             accBiasPred = accBias - obj.pAcc*eye(3)*accBias*Ts;% 
             gyroBiasPred = gyroBias - obj.pGyro*eye(3)*gyroBias; %
             
-            % make sure quaternion is normalized
-            quatPred = quatPred / sum(quatPred);% 
             
             % concatenate into the predicted nominal state
             xnompred = [posPred;
@@ -108,7 +106,7 @@ classdef ESKF
             A(1:3, 4:6) = eye(3);%...; % vel to pos
             A(4:6, 7:9) = -R*crossProdMat(acc); %...; % attitude to vel
             A(4:6, 10:12) = -R;%...; % acc bias to vel
-            A(7:9, 7:9) = -crossProdMat(omega) %...; % attitude to attitude
+            A(7:9, 7:9) = -crossProdMat(omega); %...; % attitude to attitude
             A(7:9, 13:15) = -eye(3);%...; % gyro bias to attitude
             A(10:12, 10:12) = -obj.pAcc*eye(3);%...; % acc bias to acc bias
             A(13:15, 13:15) = -obj.pGyro*eye(3);%...; % gyro bias to gyro bias
@@ -221,14 +219,11 @@ classdef ESKF
             % Inject error state into nominal state (quaternions cannot be added)
             xinjected = [
             xnom(1:6) + deltaX(1:6);
-            quatProd(xnom(7:10), [1; (1/2*deltaX(7:9))]);
+            normQuat(quatProd(xnom(7:10), [1; (1/2*deltaX(7:9))]));
             xnom(11:16) + deltaX(10:15)];
-            
-            % make sure quaterion is normalized
-            xinjected(7:10) = xinjected(7:10)/sum(xinjected(7:10));
                 
             % compensate for injection in the covariance
-            Ginject = blkdiag(eye(6), (eye(3)-crossProdMat((1/2)*deltax(7:9))), eye(6));
+            Ginject = blkdiag(eye(6), (eye(3)-crossProdMat((1/2)*deltaX(7:9))), eye(6));
             Pinjected = Ginject*P*Ginject';
         end
         
@@ -280,7 +275,7 @@ classdef ESKF
             
             I = eye(size(P));
             
-            [innov, S] = obj.innovationGNSS(xnom, P, zGNSSpos, RGNSS, leverarm);
+            [innov, ~] = obj.innovationGNSS(xnom, P, zGNSSpos, RGNSS, leverarm);
             % measurement matrix
             H = [eye(3) zeros(3, 12)]; 
             
@@ -296,7 +291,7 @@ classdef ESKF
             Pupd = (I - W*H)*P; 
             
             % error state injection
-            [xinjected, Pinjected] = inject(xnom, deltaX, Pupd); 
+            [xinjected, Pinjected] = obj.inject(xnom, deltaX, Pupd); 
         end
         
         
@@ -335,7 +330,7 @@ classdef ESKF
            qtrue = xtrue(7:10);
            qnom = xnom(7:10);
            qConj = [qnom; -qnom(2:4)]; % conjugated nominal quaternion
-           deltaQuat = quadProd(qConj, qtrue); % the error quaternion
+           deltaQuat = normQuat(quatProd(qConj, qtrue)); % the error quaternion
            deltaTheta = 2*deltaQuat(2:4); % the error state
            
            deltaBias = xtrue(11:16) - xnom(11:16);
