@@ -7,6 +7,12 @@ function qprod = quatProd(ql, qr)
     if numel(qr) == 3 % assume pure quat
         qr = [0; qr];
     end
-    
-    qprod = %
+
+    etal  = ql(1); 
+    epsl  = ql(2:4);
+    etar  = qr(1); 
+    epsr  = qr(2:4);
+
+    qprod = [etal*etar-epsl'*epsr
+             etar*epsl+etal*epsr+cross(epsl,epsr)];
 end
