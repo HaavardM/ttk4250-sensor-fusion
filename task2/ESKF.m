@@ -69,7 +69,7 @@ classdef ESKF
             
             % predictions
             posPred = pos + vel * Ts + Ts^2 / 2 * R*acc; % 
-            velPred = vel + R * acc*Ts;%
+            velPred = vel + (R * acc + obj.g)*Ts;%
             
             k = Ts*omega;
             dq = [cos(norm(k) / 2) (sin(norm(k)/2)*k' / norm(k))]';%
