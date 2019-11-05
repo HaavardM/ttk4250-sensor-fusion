@@ -68,15 +68,15 @@ classdef ESKF
             R = quat2rotmat(quat);
             
             % predictions
-            posPred = pos + vel * Ts + Ts^2 / 2 * R*acc; % 
-            velPred = vel + R * acc*Ts;%
+            posPred = pos + vel * Ts + Ts^2 / 2 * (R*acc + obj.g); % 
+            velPred = vel + (R * acc + obj.g)*Ts;%
             
             k = Ts*omega;
             dq = [cos(norm(k) / 2) (sin(norm(k)/2)*k' / norm(k))]';%
             quatPred = normQuat(quatProd(quat, dq));%
             
             accBiasPred = accBias - obj.pAcc*eye(3)*accBias*Ts;% 
-            gyroBiasPred = gyroBias - obj.pGyro*eye(3)*gyroBias; %
+            gyroBiasPred = gyroBias - obj.pGyro*eye(3)*gyroBias*Ts; %
             
             
             % concatenate into the predicted nominal state
@@ -154,7 +154,7 @@ classdef ESKF
             V = [-A, G*obj.Qerr*G'; zeros(15), A']*Ts; %; % the matrix exponent in Van Loan
             VanLoanMat = expm(V); % can potentially be slow
              
-            % exctract relevat matrices.
+            % exctract relevant matrices.
             Ad = VanLoanMat(16:30, 16:30)';
             GQGd = Ad * VanLoanMat(1:15, 16:30); %TODO This might not work...    
         end
@@ -219,7 +219,7 @@ classdef ESKF
             % Inject error state into nominal state (quaternions cannot be added)
             xinjected = [
             xnom(1:6) + deltaX(1:6);
-            normQuat(quatProd(xnom(7:10), [1; (1/2*deltaX(7:9))]));
+            normQuat(quatProd(xnom(7:10), [1; ((1/2)*deltaX(7:9))]));
             xnom(11:16) + deltaX(10:15)];
                 
             % compensate for injection in the covariance
@@ -329,7 +329,7 @@ classdef ESKF
             % attitude (just some suggested steps, you are free to change)
            qtrue = xtrue(7:10);
            qnom = xnom(7:10);
-           qConj = [qnom; -qnom(2:4)]; % conjugated nominal quaternion
+           qConj = [qnom(1); -qnom(2:4)]; % conjugated nominal quaternion
            deltaQuat = normQuat(quatProd(qConj, qtrue)); % the error quaternion
            deltaTheta = 2*deltaQuat(2:4); % the error state
            

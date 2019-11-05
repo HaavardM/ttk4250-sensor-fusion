@@ -5,16 +5,16 @@ steps = size(zAcc,2);
 
 %% Measurement noise
 % GNSS Position  measurement
-p_std = [1, 1, 1]'; % Measurement noise
+p_std = [1, 1 , 2]'; % Measurement noise
 RGNSS = diag(p_std.^2);
 
 % accelerometer
-qA = 0.05;% accelerometer measurement noise covariance
-qAb = 100; % accelerometer bias driving noise covariance
+qA = (1.167e-3)^2;% accelerometer measurement noise covariance
+qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
 pAcc = 0; % accelerometer bias reciprocal time constant
 
-qG = 0.001; % gyro measurement noise covariance
-qGb = 0.1/3600;  % gyro bias driving noise covariance
+qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
+qGb = (2e-5)^2;  % gyro bias driving noise covariance
 pGyro = 0; % gyrp bias reciprocal time constant
 
 
@@ -64,7 +64,7 @@ for k = 1:N
         eskf.NEES(xest(:, k), Pest(:, :,  k), xtrue(:, k));
     
     if k < N
-        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k), zGyro(:, k), dt);
+        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k+1), zGyro(:, k+1), dt);
         % sanity check, remove for speed
         if any(any(~isfinite(Ppred(:, :, k + 1))))
            error('not finite Ppred at time %d', k + 1)
