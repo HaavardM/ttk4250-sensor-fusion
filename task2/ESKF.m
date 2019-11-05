@@ -154,7 +154,7 @@ classdef ESKF
             V = [-A, G*obj.Qerr*G'; zeros(15), A']*Ts; %; % the matrix exponent in Van Loan
             VanLoanMat = expm(V); % can potentially be slow
              
-            % exctract relevat matrices.
+            % exctract relevant matrices.
             Ad = VanLoanMat(16:30, 16:30)';
             GQGd = Ad * VanLoanMat(1:15, 16:30); %TODO This might not work...    
         end
@@ -219,7 +219,7 @@ classdef ESKF
             % Inject error state into nominal state (quaternions cannot be added)
             xinjected = [
             xnom(1:6) + deltaX(1:6);
-            normQuat(quatProd(xnom(7:10), [1; (1/2*deltaX(7:9))]));
+            normQuat(quatProd(xnom(7:10), [1; ((1/2)*deltaX(7:9))]));
             xnom(11:16) + deltaX(10:15)];
                 
             % compensate for injection in the covariance
