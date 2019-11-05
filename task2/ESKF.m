@@ -68,7 +68,7 @@ classdef ESKF
             R = quat2rotmat(quat);
             
             % predictions
-            posPred = pos + vel * Ts + Ts^2 / 2 * R*acc; % 
+            posPred = pos + vel * Ts + Ts^2 / 2 * (R*acc + obj.g); % 
             velPred = vel + (R * acc + obj.g)*Ts;%
             
             k = Ts*omega;
@@ -76,7 +76,7 @@ classdef ESKF
             quatPred = normQuat(quatProd(quat, dq));%
             
             accBiasPred = accBias - obj.pAcc*eye(3)*accBias*Ts;% 
-            gyroBiasPred = gyroBias - obj.pGyro*eye(3)*gyroBias; %
+            gyroBiasPred = gyroBias - obj.pGyro*eye(3)*gyroBias*Ts; %
             
             
             % concatenate into the predicted nominal state
@@ -329,7 +329,7 @@ classdef ESKF
             % attitude (just some suggested steps, you are free to change)
            qtrue = xtrue(7:10);
            qnom = xnom(7:10);
-           qConj = [qnom; -qnom(2:4)]; % conjugated nominal quaternion
+           qConj = [qnom(1); -qnom(2:4)]; % conjugated nominal quaternion
            deltaQuat = normQuat(quatProd(qConj, qtrue)); % the error quaternion
            deltaTheta = 2*deltaQuat(2:4); % the error state
            
