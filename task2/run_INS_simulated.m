@@ -74,7 +74,11 @@ end
 
 %% plots
 GNSSk = GNSSk - 1;
-figure(1);
+if exist('showplt_gnss') && showplt_gnss
+    figure();
+else
+    figure("visible", "off");
+end
 clf;
 plot3(xest(2, 1:N), xest(1, 1:N), -xest(3, 1:N));
 hold on;
@@ -90,10 +94,16 @@ for i =1:N
    eul(:, i) = quat2eul(xest(7:10, i));
    eul_true(:, i) = quat2eul(xtrue(7:10, i));
 end
+printplot(gcf, "a2-sim-gnss.pdf");
 % state estimate plot
 %eul = cellfun(@(q) quat2eul(q), mat2cell(xest(7:10, :), 1));
 %eul_true = cellfun(@(q) quat2eul(q), mat2cell(xtrue(7:10, :), 1));
-figure(2); clf; hold on;
+if exist('showplt_estimates') && showplt_estimates
+    figure();
+else
+    figure("visible", "off");
+end
+clf; hold on;
 
 subplot(5,1,1);
 plot((0:(N-1))*dt, xest(1:3, 1:N))
@@ -125,11 +135,17 @@ plot((0:(N-1))*dt, xest(14:16, 1:N)*180/pi * 3600)
 grid on;
 ylabel('Gyro bias [deg/h]')
 legend('x', 'y', 'z')
+printplot(gcf, 'a2-sim-estimates.pdf');
 
 %suptitle('States estimates');
 
 % state error plots
-figure(3); clf; hold on;
+if exist('showplt_state_errors') && showplt_state_errors
+    figure();
+else
+    figure("visible", "off");
+end
+clf; hold on;
 
 subplot(5,1,1);
 plot((0:(N-1))*dt, deltaX(1:3,:))
@@ -170,11 +186,17 @@ ylabel('Gyro bias error [deg/s]')
 legend(sprintf('x (%.3g)', sqrt(mean(((deltaX(13, 1:N))*180/pi).^2))),...
     sprintf('y (%.3g)', sqrt(mean(((deltaX(14, 1:N))*180/pi).^2))),...
     sprintf('z (%.3g)', sqrt(mean(((deltaX(15, 1:N))*180/pi).^2))))
+printplot(gcf, 'a2-sim-state_error.pdf');
 
 %suptitle('States estimate errors');
 
 % error distance plot
-figure(4); clf; hold on;
+if exist('showplt_error_distance') && showplt_error_distance
+    figure();
+else
+    figure("visible", "off");
+end
+clf; hold on;
 subplot(2,1,1); hold on;
 plot((0:(N-1))*dt, sqrt(sum(deltaX(1:3, 1:N).^2,1)))
 plot((0:100:(N-1))*dt, sqrt(sum((xtrue(1:3, 100:100:N) - zGNSS(:, 1:GNSSk)).^2,1)))
@@ -188,13 +210,20 @@ plot((0:(N-1))*dt, sqrt(sum(deltaX(4:6, 1:N).^2, 1)))
 ylabel('Speed error [m/s]');
 title(sprintf('RMSE: %.3g', sqrt(mean(sum(deltaX(4:6, 1:N).^2, 1)))));
 grid on;
+printplot(gcf, "a2-sim-error_distance.pdf");
 
 %% CONSISTENCY
 alpha = 0.05;
 CI15 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 15);
 CI3 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 3);
 
-figure(5); clf;
+if exist('showplt_nees') && showplt_nees
+    figure();
+else
+    figure("visible", "off");
+end
+
+clf;
 subplot(7,1,1);
 plot((0:(N-1))*dt, NEES);
 grid on;
@@ -249,21 +278,28 @@ grid on;
 hold on;
 plot([0, N-1]*dt, (CI3*ones(1,2))', 'r--');
 insideCI = mean((CI3(1) <= NIS).* (NIS <= CI3(2)));
-title(sprintf('NIS (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+title(sprintf('NIS (%.3g%% inside %.3g%% confidence interval)', 100*insideCI, 100*(1 - alpha)));
+printplot(gcf, "a2-sim-nees.pdf");
 
 % boxplot
-figure(6)
-subplot(1,3,1)
+clf;
+if exist('showplt_boxplot') && showplt_boxplot
+    fig = figure();
+else
+    fig = figure("visible", "off");
+end
+subplot(1,3,1);
 gaussCompare = sum(randn(3, numel(NIS)).^2, 1);
 boxplot([NIS', gaussCompare'],'notch','on',...
-        'labels',{'NIS','gauss'})
-grid on
-subplot(1,3,2)
+        'labels',{'NIS','gauss'});
+grid on;
+subplot(1,3,2);
 gaussCompare15 = sum(randn(15, N).^2, 1);
 gaussCompare3 = sum(randn(3, N).^2, 1);
 boxplot([NEES', gaussCompare15'],'notch', 'on', 'labels',{'NEES','gauss(15dim)'});
 grid on;
-subplot(1,3,3)
+subplot(1,3,3);
 boxplot([NEESpos', NEESvel', NEESatt', NEESaccbias', NEESgyrobias', gaussCompare3'],...
-    'notch', 'on', 'labels',{'NEESpos', 'NEESvel', 'NEESatt', 'NEESaccbias', 'NEESgyrobias', 'gauss(3dim)'})
+    'notch', 'on', 'labels',{'NEESpos', 'NEESvel', 'NEESatt', 'NEESaccbias', 'NEESgyrobias', 'gauss(3dim)'});
 grid on;
+printplot(fig, "a2-sim-boxplot.pdf");
