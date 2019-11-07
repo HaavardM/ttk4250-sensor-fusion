@@ -1,1 +1,26 @@
-\subsection{Implement IMM-PDAF}
+\subsection{IMM-PDAF}
+\subsubsection{IMM}
+The behaviour of targets we want to model might change over time, and any single (reasonably simple) model might not cover all situations. A better approach might be to combine multiple simple models with each model describing a subset of the systems behaviour. In our case we want to model a boat that is either moving straight forward or it turns. We can then use an \textit{interactive multiple models} (IMM) approach to combine a CT (Constant Turn) and CV (Constant Velocity) models. The IMM will weigh the different models based on how well it describe the current state (using the likelihood of the model being the correct one).
+
+\subsubsection{PDAF}
+No sensor is perfect which is also true for the radar used to detect the boat we are tracking. The radar outputs a lot of measurements which may or may not originate from our target. To solve this we use a \texttt{probability data association filter} to associate measurements with our target and weigh them according to their likelihood of originating from our target.
+
+We can combine the two and develop the \texttt{interactive multiple models probability data association filter} to track a moving boat using radar measurements.
+
+\subsubsection{Implementation}
+A normal IMM filter was developed according to chapter 6 in \cite{edmund} and was initialized with a CT and a CV EKF model. The prediction step of our IMM-PDAF is a normal IMM predicition step. 
+
+When new measurements arrive the IMM-PDAF will first gate the measurements to reduce the number of measurements. If a new measurement is very unlikely (NIS for each model less than a predefined gate size) it will be dropped.
+
+We can then calculate the loglikelihood $\log(\tilde{\beta})$ of the measurement belonging to the target, conditional on the model used. (i.e we have to calculate the loglikelihood for the measurement for all models) We assume that at most one measurement can originate from the target. The loglikelihood of no measurement originating from the target is also added using a clutter model as described in Corollary 7.4.3 in \cite{edmund}. From the loglikelihoods we get the association probabilities according to 
+\begin{equation}
+\beta = \frac{\tilde{\beta}}{\sum_{a_k}{\tilde{\beta}^{a_k}}} = \frac{\exp(\log(\tilde{\beta}))}{\sum_{a_k} {\exp(\log(\tilde{\beta}^{a_k}))}} 
+\end{equation}
+
+We have to normalize since $\tilde{\beta}$ is only proportional to the associaton probabilities. 
+
+We can update the IMM conditional on each possible measurement association. For each conditional update we get a new mixture model from the IMM so the total mixture model for the IMM-PDAF after one iteration (assuming single gaussian input) therefore contains $(M+1)N$ components where $M$ is the number of gated measurements and $N$ is the number of models. This will again continue to grow for each timestep as new measurements will create additional components.
+
+We therefore want to reduce the number of components by conditioning the association probabilities on the mode probabilities. Further we reduce the mixture for each mode to a single gaussian component using 6.18 and 6.20 from \cite{edmund}. 
+
+
