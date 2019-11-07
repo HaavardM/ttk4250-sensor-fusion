@@ -5,20 +5,20 @@ addpath('./plotfuncs');
 %% Parameters
 fignum = 1;
 
-r = 100;
-lambda = 1e-4;
-PD = 0.95;
+r = 150;
+lambda = 5e-5;
+PD = 0.85;
 gateSize = 5^2;
 
 % dynamic models
-qCV = 4;
-qCT = [5.5, 0.000005];
+qCV = 0.1;
+qCT = [4, 0.0000002];
 qCVh = 100;
 modIdx = 1:3; 
 M = numel(modIdx);
-PI = [0.95    0.025    0.025
-      0.025    0.95    0.025
-      0.025    0.025    0.95];
+PI = [0.95    0.04    0.25
+      0.04    0.95    0.25
+      0.01    0.01    0.50];
   
 PI = PI(modIdx, modIdx); % select the models to use
 PI = PI./sum(PI,1); % be sure to normalize
