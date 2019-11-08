@@ -1,6 +1,6 @@
-\subsection{Tune the IMM to the given data}
+\subsection{Tune the IMM to the given simulated data}
 
-We initialized the filter using the values from previous excercises which we knew worked well. We then modified the \textit{simulate\_atc\_track.m} script to allow us to generate pure CV and CT tracks and used those to tune the corresponding CV/CT PDAF models, using NEES confidence interval (CI) and common sense as metrics. Multiple tracks were used for each model to increase robustness. The measurement noise $r$, clutter intensity $\lambda$, the detection probability $P_D$ and the gate size should be independent of modes, so they were tuned and balanced between the two models. The process noise for CV $q_{cv}$ and CT $q_{ct}$ were tuned individually using their correspondig models. For IMM PDAF tuning we created a custom plot function which allowed us to plot the tracked path in colors corresponding to the mode probability (see \cref{fig:task22_modeprob}). We then tuned the IMM Markov Matrix $PI$ so that the CV model was used during constant velocity sections of the track, and the CT models during the turns (fig \ref{fig:task22_modeprob_tuned}). $q_{cv}$ and $q_{ct}$ does affect the mode probabilities, i.e we risk always prefering one model if the process noises are not balanced (see fig \ref{fig:task22_modeprob_highcv} where $q_{cv}$ is big compared to $q_{ct}$). Our finished tuning \cref{eq:tuning1,eq:tuning2,eq:tuning3,eq:tuning4} works well and seems to balance the two models well.
+We initialized the filter using the values from previous excercises which we knew worked well. We then modified the \textit{simulate\_atc\_track.m} script to allow us to generate pure CV and CT tracks and used those to tune the corresponding CV/CT PDAF models, using the NEES $95 \%$ confidence interval (CI) and common sense as metrics. Multiple simulated tracks were used for each model to increase robustness. The measurement noise $r$,clutter intensity $\lambda$, the detection probability $P_D$ and the gate size should be independent of modes, so they were tuned and balanced between the two models. The process noise for CV $q_{cv}$ and CT $q_{ct}$ were tuned individually using their correspondig models. For IMM PDAF tuning we created a custom plot function which allowed us to plot the tracked path in colors corresponding to the mode probability (see \cref{fig:task22_modeprob}). We then tuned the IMM Markov Matrix $PI$ so that the CV model was used during constant velocity sections of the track, and the CT models during the turns (fig \ref{fig:task22_modeprob_tuned}). $q_{cv}$ and $q_{ct}$ does affect the mode probabilities, i.e we risk always prefering one model if the process noises are not balanced (see fig \ref{fig:task22_modeprob_highcv} where $q_{cv}$ is big compared to $q_{ct}$). Our finished tuning \cref{eq:tuning1,eq:tuning2,eq:tuning3,eq:tuning4} works well and seems to balance the two models well. The NEES is mostly within the $95\%$ CI as can be seen in \cref{fig:task22_NEES}. The estimation error, as shown in \cref{fig:task22_tracking_error}, is also quite small and well withing what we consider acceptable limits.
 \begin{align}
         r &= 5 & \lambda &= 10^{-4} \label{eq:tuning1} \\ 
         P_D &= 0.95 & \texttt{gateSize} &= 5^2 \label{eq:tuning2} \\
@@ -10,7 +10,7 @@ We initialized the filter using the values from previous excercises which we kne
 
 \begin{figure}
     \centering
-    \hspace{-3cm}\begin{adjustbox}{minipage=\linewidth, scale=1.3}
+    \hspace*{-2cm}\begin{adjustbox}{minipage=\linewidth, scale=1.3}
         \begin{subfigure}{.5\textwidth}
             \includegraphics[width=\linewidth]{plots/task22_modeprob.eps} 
             \caption{Our tuning}
@@ -24,4 +24,21 @@ We initialized the filter using the values from previous excercises which we kne
     \end{adjustbox}
         \caption{Mode probability plot: Yellow = CV, Blue = CT}
         \label{fig:task22_modeprob}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \hspace*{-2cm}\begin{adjustbox}{minipage=\linewidth, scale=1.3}
+        \begin{subfigure}{.5\textwidth}
+            \includegraphics[width=\linewidth]{plots/a1/task2/a1_task2_error.eps} 
+            \caption{Tracking error}
+            \label{fig:task22_tracking_error}
+        \end{subfigure}
+        \begin{subfigure}{.5\textwidth}
+            \includegraphics[width=\linewidth]{plots/a1/task2/a1_task2_NEES.eps} 
+            \caption{NEES}
+            \label{fig:task22_NEES}
+        \end{subfigure}
+    \end{adjustbox}
+        \caption{Tracking performance when using simulated data}
 \end{figure}

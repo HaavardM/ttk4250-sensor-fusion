@@ -3,7 +3,7 @@ clear all; close all;
 addpath('./plotfuncs');
 
 %% Load/generate data
-usePregen = false; % you can generate your own data if set to false
+usePregen = true; % you can generate your own data if set to false
 if usePregen
     load task2data.mat;
 else
@@ -24,8 +24,8 @@ plot_true_path = false;
 plot_tracked_path = false;
 plot_mode_prob = false;
 plot_mode_prob_path = true;
-plot_NEES = false;
-plot_error = false;
+plot_NEES = true;
+plot_error = true;
 plot_movie = false;
 
 if plot_true_path
