@@ -3,17 +3,20 @@ IMUTs = diff(timeIMU);
 dt = mean(IMUTs);
 K = size(zAcc,2);
 %% Measurement noise
-% GNSS Position  measurement
-...
 
 % accelerometer
-qA = ...^2; % accelerometer measurement noise covariance
-qAb = ...^2; % accelerometer bias driving noise covariance
-pAcc = ...; % accelerometer bias reciprocal time constant
+p_std = [1, 1 , 2]'; % Measurement noise
+RGNSS = diag(p_std.^2);
 
-qG = ...^2; % gyro measurement noise covariance
-qGb = ...^2;  % gyro bias driving noise covariance
-pGyro = ...; % gyrp bias reciprocal time constant
+% accelerometer
+qA = (1.167e-3)^2;% accelerometer measurement noise covariance
+qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
+pAcc = 0; % accelerometer bias reciprocal time constant
+
+qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
+qGb = (2e-5)^2;  % gyro bias driving noise covariance
+pGyro = 0; % gyrp bias reciprocal time constant
+
 
 
 %% Estimator
@@ -46,25 +49,26 @@ for k = 1:N
     t = timeIMU(k);
     
     if mod(k, 1000) == 0
-        fprintf('time %.3f at step %d\n', t - IMUtime(1), k);
+        fprintf('time %.3f at step %d\n', t - IMUTs(1), k);
     end
     
     if timeGNSS(GNSSk) < t
-        NIS(GNSSk) = ...;
-        [xest(:, k), Pest(:, :, k)] = ...;
+        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
+        [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
         GNSSk = GNSSk + 1;
     
         if any(any(~isfinite(Pest(:, :, k))))
             error('not finite Pest at time %d',k)
         end
     else % no updates so estimate = prediction
-        xest(:, k) = ...;
-        Pest(:, :, k) = ...;
+        xest(:, k) = xpred(:, k) ;
+        Pest(:, :, k) = Ppred(:, :, k) ;
     end
 
     if k < K
-        [xpred(:, k + 1),  Ppred(:, :, k + 1)] = ...;
+        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k+1), zGyro(:, k+1), dt);
         
+        % Sanity check: Remove for speeeeeeeeeeeeeeeeed
         if any(any(~isfinite(Ppred(:, :, k + 1))))
             error('not finite Ppred at time %d', k + 1)
         end
@@ -82,7 +86,10 @@ ylabel('North [m]')
 zlabel('Altitude [m]')
 
 %%
-eul = quat2eul(xest(7:10, :))*180/pi;
+eul = zeros(3, N);
+for i =1:N
+   eul(:, i) = quat2eul(xest(7:10, i));
+end
 figure(2); clf; hold on;
 subplot(5,1,1);
 plot(timeIMU(1:N) - timeIMU(1), xest(1:3, 1:N))
