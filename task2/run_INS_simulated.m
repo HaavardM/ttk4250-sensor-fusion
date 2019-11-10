@@ -4,7 +4,7 @@ steps = size(zAcc,2);
 
 %% Measurement noise
 % GNSS Position  measurement
-p_std = 4e-1 * [1, 1 , 5]'; % Measurement noise
+p_std = 4e-1 * [1, 1 , 2]'; % Measurement noise
 RGNSS = diag(p_std.^2);
 
 % accelerometer
@@ -12,8 +12,8 @@ qA = (1.167e-3)^2;% accelerometer measurement noise covariance
 qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
 pAcc = 1e-8; % accelerometer bias reciprocal time constant
 
-qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
-qGb = (8e-6)^2;  % gyro bias driving noise covariance
+qG = (deg2rad(2.5e-2))^2; % gyro measurement noise covariance
+qGb = (4e-6)^2;  % gyro bias driving noise covariance
 pGyro = 1e-8; % gyrp bias reciprocal time constant
 
 
