@@ -3,8 +3,7 @@ IMUTs = diff(timeIMU);
 dt = mean(IMUTs);
 K = size(zAcc,2);
 %% Measurement noise
-
-% accelerometer
+% GNSS Position  measurement
 p_std = 4e-1 * [1, 1 , 2]'; % Measurement noise
 RGNSS = diag(p_std.^2);
 
@@ -53,7 +52,7 @@ for k = 1:N
     end
     
     if timeGNSS(GNSSk) < t
-        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
+        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS * GNSSaccuracy(GNSSk)^2);
         [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
         GNSSk = GNSSk + 1;
     
@@ -69,9 +68,9 @@ for k = 1:N
         [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k+1), zGyro(:, k+1), dt);
         
         % Sanity check: Remove for speeeeeeeeeeeeeeeeed
-        if any(any(~isfinite(Ppred(:, :, k + 1))))
-            error('not finite Ppred at time %d', k + 1)
-        end
+%         if any(any(~isfinite(Ppred(:, :, k + 1))))
+%             error('not finite Ppred at time %d', k + 1)
+%         end
     end  
 end
 %% plots
