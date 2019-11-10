@@ -72,7 +72,7 @@ classdef ESKF
             velPred = vel + (R * acc + obj.g)*Ts;%
             
             k = Ts*omega;
-            dq = [cos(norm(k) / 2) (sin(norm(k)/2)*k' / norm(k))]';%
+            dq = [cos(norm(k) / 2); (sin(norm(k)/2)*k / norm(k))];%
             quatPred = normQuat(quatProd(quat, dq));%
             
             accBiasPred = accBias - obj.pAcc*eye(3)*accBias*Ts;% 
@@ -275,7 +275,7 @@ classdef ESKF
             
             I = eye(size(P));
             
-            [innov, ~] = obj.innovationGNSS(xnom, P, zGNSSpos, RGNSS, leverarm);
+            [innov, S] = obj.innovationGNSS(xnom, P, zGNSSpos, RGNSS, leverarm);
             % measurement matrix
             H = [eye(3) zeros(3, 12)]; 
             
@@ -286,7 +286,7 @@ classdef ESKF
             end
             
             % KF error state update
-            W = (P*H') / (H*P*H' + RGNSS); % Kalman gain
+            W = (P*H') / S; % Kalman gain
             deltaX = W*innov; 
             Pupd = (I - W*H)*P; 
             
@@ -309,7 +309,7 @@ classdef ESKF
                 leverarm = zeros(3,1);
             end
             [innov, S] = obj.innovationGNSS(xnom, P, zGNSSpos, RGNSSpos, leverarm);
-            NIS = (innov' / S) * innov;
+            NIS = innov' * (S \ innov);
         end
         
         function deltaX = deltaX(~, xnom, xtrue)
@@ -353,7 +353,7 @@ classdef ESKF
             NEES = (deltaX' / P) * deltaX;
             NEESpos = (deltaX(1:3)' / P(1:3, 1:3)) * deltaX(1:3);
             NEESvel = (deltaX(4:6)' / P(4:6, 4:6)) * deltaX(4:6);
-            NEESatt = (deltaX(6:9)' / P(6:9, 6:9)) * deltaX(6:9);
+            NEESatt = (deltaX(7:9)' / P(7:9, 7:9)) * deltaX(7:9);
             NEESaccbias = (deltaX(10:12)' / P(10:12, 10:12)) * deltaX(10:12);
             NEESgyrobias = (deltaX(13:15)' / P(13:15, 13:15)) * deltaX(13:15);
         end

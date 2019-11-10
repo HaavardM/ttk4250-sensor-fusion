@@ -1,21 +1,20 @@
-close all; clear all;
 load task_simulation.mat;
 dt = mean(diff(timeIMU));
 steps = size(zAcc,2);
 
 %% Measurement noise
 % GNSS Position  measurement
-p_std = [1, 1 , 2]'; % Measurement noise
+p_std = 4e-1 * [1, 1 , 5]'; % Measurement noise
 RGNSS = diag(p_std.^2);
 
 % accelerometer
 qA = (1.167e-3)^2;% accelerometer measurement noise covariance
 qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
-pAcc = 0; % accelerometer bias reciprocal time constant
+pAcc = 1e-8; % accelerometer bias reciprocal time constant
 
 qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
-qGb = (2e-5)^2;  % gyro bias driving noise covariance
-pGyro = 0; % gyrp bias reciprocal time constant
+qGb = (8e-6)^2;  % gyro bias driving noise covariance
+pGyro = 1e-8; % gyrp bias reciprocal time constant
 
 
 %% Estimator
@@ -34,11 +33,22 @@ xpred(1:3, 1) = [0, 0, -5]'; % starting 5 meters above ground
 xpred(4:6, 1) = [20, 0, 0]'; % starting at 20 m/s due north
 xpred(7, 1) = 1; % no initial rotation: nose to north, right to East and belly down.
 
-Ppred(1:3, 1:3, 1) = eye(3); 
-Ppred(4:6, 4:6, 1) = eye(3);
-Ppred(7:9, 7:9, 1) = eye(3); % error rotation vector (not quat)
-Ppred(10:12, 10:12, 1) = eye(3);
-Ppred(13:15, 13:15, 1) = eye(3);
+
+Ppred(1:3, 1:3, 1) = 1e-3*eye(3); 
+Ppred(4:6, 4:6, 1) = 1e-3*eye(3);
+Ppred(7:9, 7:9, 1) = 1e-3*eye(3); % error rotation vector (not quat)
+Ppred(10:12, 10:12, 1) = 1e-2*eye(3);
+Ppred(13:15, 13:15, 1) = 1e-6*eye(3);
+
+
+deltaX       = zeros(15, 90000);
+NIS          = zeros(1, 900);
+NEES         = zeros(1, 90000);
+NEESaccbias  = zeros(1, 90000);
+NEESatt      = zeros(1, 90000);
+NEESgyrobias = zeros(1, 90000);
+NEESpos      = zeros(1, 90000);
+NEESvel      = zeros(1, 90000);
 
 %% run
 N = 90000;
@@ -48,7 +58,6 @@ for k = 1:N
         NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
         [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS);
         GNSSk = GNSSk  + 1;
-        
         % sanity check, remove for some minor speed
         if any(any(~isfinite(Pest(:, :, k))))
             error('not finite Pest at time %d',k)
@@ -58,7 +67,6 @@ for k = 1:N
         xest(:, k) = xpred(:, k) ;
         Pest(:, :, k) = Ppred(:, :, k) ;
     end
-    
     deltaX(:, k) = eskf.deltaX(xest(:, k), xtrue(:, k));
     [NEES(:, k), NEESpos(:, k), NEESvel(:, k), NEESatt(:, k), NEESaccbias(:, k), NEESgyrobias(:, k)] = ...
         eskf.NEES(xest(:, k), Pest(:, :,  k), xtrue(:, k));
@@ -282,12 +290,13 @@ title(sprintf('NIS (%.3g%% inside %.3g%% confidence interval)', 100*insideCI, 10
 printplot(gcf, "a2-sim-nees.pdf");
 
 % boxplot
-clf;
+
 if exist('showplt_boxplot') && showplt_boxplot
     fig = figure();
 else
     fig = figure("visible", "off");
 end
+clf;
 subplot(1,3,1);
 gaussCompare = sum(randn(3, numel(NIS)).^2, 1);
 boxplot([NIS', gaussCompare'],'notch','on',...
