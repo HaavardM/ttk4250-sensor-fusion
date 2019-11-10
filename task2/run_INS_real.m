@@ -4,7 +4,7 @@ dt = mean(IMUTs);
 K = size(zAcc,2);
 %% Measurement noise
 % GNSS Position  measurement
-p_std = 7e-2 * [1, 1 , 2]'; % Measurement noise
+p_std = 9e-2 * [1, 1 , 2]'; % Measurement noise
 RGNSS = diag(p_std.^2); % Note: Continuously multiplied with GNNSaccuracy^2
 
 % accelerometer
