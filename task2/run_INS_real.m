@@ -129,3 +129,7 @@ gaussCompare = sum(randn(3, numel(NIS)).^2, 1);
 boxplot([NIS', gaussCompare'],'notch','on',...
         'labels',{'NIS','gauss'});
 grid on;
+
+%%
+start = 300;
+plotcoloredtrack(zGNSS(:, start:GNSSk-1), NIS(start:GNSSk-1), 5);
