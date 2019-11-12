@@ -8,11 +8,11 @@ p_std = 9e-2 * [1, 1 , 2]'; % Measurement noise
 RGNSS = diag(p_std.^2); % Note: Continuously multiplied with GNNSaccuracy^2
 
 % accelerometer
-qA = (1.167e-3)^2;% accelerometer measurement noise covariance
+qA = (1.167e-3*sqrt(1/dt))^2;% accelerometer measurement noise covariance
 qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
 pAcc = 1e-8; % accelerometer bias reciprocal time constant
 
-qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
+qG = (deg2rad(2.5e-3)*sqrt(1/dt))^2; % gyro measurement noise covariance
 qGb = (8e-6)^2;  % gyro bias driving noise covariance
 pGyro = 1e-8; % gyrp bias reciprocal time constant
 
@@ -112,7 +112,7 @@ plot(timeIMU(1:N) - timeIMU(1), xest(14:16, 1:N)*180/pi * 3600)
 grid on;
 ylabel('Gyro bias [rad/s]')
 
-figure(3);
+fig3 = figure(3);
 alpha = 0.05;
 CI3 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 3);
 clf;
@@ -122,6 +122,7 @@ hold on;
 plot([0, timeIMU(N) - timeIMU(1)], (CI3*ones(1,2))', 'r--');
 insideCI = mean((CI3(1) <= NIS).* (NIS <= CI3(2)));
 title(sprintf('NIS (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+printplot(fig3, "a2-real-nis.pdf");
 
 figure(4); clf;
 gaussCompare = sum(randn(3, numel(NIS)).^2, 1);
