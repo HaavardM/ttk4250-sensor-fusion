@@ -35,11 +35,11 @@ xpred(1:3, 1) = [0, 0, 0]'; % starting 5 meters above ground
 xpred(7, 1) = cosd(45); % nose to east, right to south and belly down.
 xpred(10, 1) = sind(45);
 
-Ppred(1:3, 1:3, 1) = 10^2*eye(3); 
-Ppred(4:6, 4:6, 1) = 3^2*eye(3);
-Ppred(7:9, 7:9, 1) = (pi/30)^2 * eye(3); % error rotation vector (not quat)
-Ppred(10:12, 10:12, 1) = 0.05^2 * eye(3);
-Ppred(13:15, 13:15, 1) = (2e-6)^2 * eye(3);
+Ppred(1:3, 1:3, 1) = (2e-1)^2*eye(3); % pos
+Ppred(4:6, 4:6, 1) = (3e-4)^2*eye(3); % vel
+Ppred(7:9, 7:9, 1) = (1e-1*(pi/30))^2 * eye(3); % error rotation (vector (not quat)
+Ppred(10:12, 10:12, 1) = 0.02^2 * eye(3); % acc bias
+Ppred(13:15, 13:15, 1) = (1e-4)^2 * eye(3); % gyro bias
 
 %% run
 N = K;
@@ -131,5 +131,29 @@ boxplot([NIS', gaussCompare'],'notch','on',...
 grid on;
 
 %%
-start = 300;
-plotcoloredtrack(zGNSS(:, start:GNSSk-1), NIS(start:GNSSk-1), 5);
+start = 1;
+plotcoloredtrack(zGNSS(:, start:GNSSk-1), NIS(start:GNSSk-1), "NIS colored track (xy projection)", 5, 5);
+
+%%
+states(1) = "position";
+states(4) = "velocity";
+states(7) = "attitude";
+states(10) = "acc bias";
+states(13) = "gyro bias";
+fig9 = figure(90);
+plot_no = 0;
+for state = 1:3:13
+    plot_no = plot_no + 1;
+    k = 1;
+    for i = 1:N
+        if timeIMU(i) > timeGNSS(k)
+            GNSS_Ppred_norm(:, :, k) = norm(Ppred(state:state+2, state:state+2, i));
+            k = k + 1;
+        end
+    end
+    start = 1;
+    subplot(5,1,plot_no);
+    plot(GNSS_Ppred_norm(:, start:GNSSk-1));
+    title(sprintf("%s Ppred", states(state)));
+    %plotcoloredtrack(zGNSS(:, start:GNSSk-1), GNSS_Ppred_norm(:,start:GNSSk-1), sprintf("%s Ppred colored track", states(state)), 3000, 6 + state);
+end
