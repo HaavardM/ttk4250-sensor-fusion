@@ -5,19 +5,23 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{amsfonts}
+\usepackage{mathtools}
 \usepackage{graphicx}
 \usepackage{capt-of}
 \usepackage{adjustbox}
 \usepackage{listings}
+\usepackage{cleveref}
 \usepackage{siunitx}
 \usepackage{subcaption}
+\usepackage{biblatex}
+\addbibresource{sample.bib}
 \usepackage[section]{placeins}
 
 
 
 % Section numbering %
 \renewcommand\thesection{Assignment \arabic{section}}
-\renewcommand\thesubsection{\arabic{subsection})}
+\renewcommand\thesubsection{\arabic{subsection}}
 
 % Proofs
 \newcommand\TombStone{\rule{.5em}{.5em}} % The tombest stone
@@ -27,18 +31,19 @@
 \title{Interactive Multiple Model Probability Data Association Filter}
 \author{Håvard Mellby \& Sigurd Totland}
 
+
 \begin{document}
 \maketitle
 
-\section{}
-\input{a1task1}
-\include{a1task2}
-\include{a1task3}
+\newpage 
+\input{a1.tex}
 \section{}
 \input{a2task1}
 \include{a2task2}
 \include{a2task3}
 \section{}
 
+
+\printbibliography
 \end{document}
 
