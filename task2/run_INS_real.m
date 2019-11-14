@@ -1,3 +1,13 @@
+%% Parameters
+showplt_track = false;
+showplt_estimates = false;
+showplt_nis = false;
+showplt_boxplot = false;
+showplt_nis_colored_track = true; % Must be true to print
+showplt_ppred_colored_track = false; % Must be true to print
+showplt_covariance = false;
+
+%% Load data
 load task_real;
 IMUTs = diff(timeIMU);
 dt = mean(IMUTs);
@@ -46,7 +56,6 @@ N = K;
 GNSSk = 1;
 for k = 1:N
     t = timeIMU(k);
-    
     if mod(k, 1000) == 0
         fprintf('time %.3f at step %d\n', t - IMUTs(1), k);
     end
@@ -74,7 +83,11 @@ for k = 1:N
     end  
 end
 %% plots
-figure(1);
+if exist('showplt_track') && showplt_track
+    figure(1);
+else
+    figure("visible", "off");
+end
 clf;
 plot3(xest(2, 1:N), xest(1, 1:N), -xest(3, 1:N));
 hold on;
@@ -83,17 +96,25 @@ grid on; axis equal
 xlabel('East [m]')
 ylabel('North [m]')
 zlabel('Altitude [m]')
+printplot(gcf, "a2-real-track.pdf");
 
 %%
 eul = zeros(3, N);
 for i =1:N
    eul(:, i) = quat2eul(xest(7:10, i));
 end
-figure(2); clf; hold on;
+%% Plot stuff
+if exist('showplt_estimates') && showplt_estimates
+    figure(2); clf; hold on;
+else
+    figure('visible', 'off'); clf; hold on;
+end
 subplot(5,1,1);
-plot(timeIMU(1:N) - timeIMU(1), xest(1:3, 1:N))
+plot(timeIMU(1:N) - timeIMU(1), xest(1:3, 1:N)); hold on;
+plot(timeGNSS(1:GNSSk) - timeGNSS(1), zGNSS(1:3, 1:GNSSk));
 grid on;
 ylabel('NED position [m]')
+legend();
 subplot(5,1,2);
 plot(timeIMU(1:N) - timeIMU(1), xest(4:6, 1:N))
 grid on;
@@ -111,8 +132,13 @@ subplot(5, 1, 5)
 plot(timeIMU(1:N) - timeIMU(1), xest(14:16, 1:N)*180/pi * 3600)
 grid on;
 ylabel('Gyro bias [rad/s]')
+printplot(gcf, "a2-real-estimates.pdf");
 
-fig3 = figure(3);
+if exist('showplt_nis') && showplt_nis
+    fig3 = figure(3);
+else
+    fig3 = figure('visible', 'off');
+end
 alpha = 0.05;
 CI3 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 3);
 clf;
@@ -124,15 +150,23 @@ insideCI = mean((CI3(1) <= NIS).* (NIS <= CI3(2)));
 title(sprintf('NIS (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
 printplot(fig3, "a2-real-nis.pdf");
 
-figure(4); clf;
+if exist('showplt_boxplot') && showplt_boxplot
+    figure(4); clf;
+else
+    figure('visible', 'off'); clf;
+end
 gaussCompare = sum(randn(3, numel(NIS)).^2, 1);
 boxplot([NIS', gaussCompare'],'notch','on',...
         'labels',{'NIS','gauss'});
 grid on;
+printplot(gcf, "a2-real-boxplot.pdf");
 
-%%
+%% NIS colored track plot
 start = 1;
-plotcoloredtrack(zGNSS(:, start:GNSSk-1), NIS(start:GNSSk-1), "NIS colored track (xy projection)", 5, 5);
+if exist('showplt_nis_colored_track') && showplt_nis_colored_track
+    plotcoloredtrack(zGNSS(:, start:GNSSk-1), NIS(start:GNSSk-1), "NIS colored track (xy projection)", 5, 5);
+    printplot(gcf, "a2-real-nis-colored-track.pdf");
+end
 
 %%
 states(1) = "position";
@@ -140,20 +174,33 @@ states(4) = "velocity";
 states(7) = "attitude";
 states(10) = "acc bias";
 states(13) = "gyro bias";
-fig9 = figure(90);
-plot_no = 0;
-for state = 1:3:13
-    plot_no = plot_no + 1;
-    k = 1;
-    for i = 1:N
-        if timeIMU(i) > timeGNSS(k)
-            GNSS_Ppred_norm(:, :, k) = norm(Ppred(state:state+2, state:state+2, i));
-            k = k + 1;
+
+%% Ppred colored track
+if exist('showplt_ppred_colored_track') && showplt_ppred_colored_track
+    plot_no = 0;
+    for state = 1:3:13
+        plot_no = plot_no + 1;
+        k = 1;
+        for i = 1:N
+            if timeIMU(i) > timeGNSS(k)
+                GNSS_Ppred_norm(:, :, k) = norm(Ppred(state:state+2, state:state+2, i));
+                k = k + 1;
+            end
         end
+        start = 1;
+        plotcoloredtrack(zGNSS(:, start:GNSSk-1), GNSS_Ppred_norm(:,start:GNSSk-1), sprintf("%s Ppred colored track", states(state)), 3000, 6 + state);
+        printplot(gcf, sprintf("a2-real-%s-ppred-colored-track.pdf", states(state)));
     end
-    start = 1;
+end
+%% Covariance plot
+if exist('showplt_covariance') && showplt_covariance
+    fig9 = figure(90);
+else
+    fig9 = figure('visible', 'off');
+end
+for state = 1:3:13
     subplot(5,1,plot_no);
     plot(GNSS_Ppred_norm(:, start:GNSSk-1));
     title(sprintf("%s Ppred", states(state)));
-    %plotcoloredtrack(zGNSS(:, start:GNSSk-1), GNSS_Ppred_norm(:,start:GNSSk-1), sprintf("%s Ppred colored track", states(state)), 3000, 6 + state);
 end
+printplot(gcf, "a2-real-covariance.pdf");
