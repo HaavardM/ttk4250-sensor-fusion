@@ -5,14 +5,14 @@ addpath('./plotfuncs');
 %% Parameters
 fignum = 1;
 
-r = 150;
+r = 200;
 lambda = 5e-5;
 PD = 0.85;
 gateSize = 5^2;
 
 % dynamic models
-qCV = 0.1;
-qCT = [4, 0.0000002];
+qCV = 4;
+qCT = [5, 0.00002];
 qCVh = 100;
 modIdx = 1:3; 
 M = numel(modIdx);
@@ -75,47 +75,33 @@ covEllSize = sqrt(eig(cov(v')));
 meanMinMeasDists = mean(d);
 meanNumberOfCloseMeasurements = mean(closecount);
 
-%% IMM
-sprobs0 = [0.5; 0.4; 0.1]; assert(sum(sprobs0) == 1, 'initial mode probabilities must sum to 1');
-sprobs0 = sprobs0(modIdx)/sum(sprobs0(modIdx)); % select models and normalize
-assert(all(sprobs0 > 0), 'probabilities must be positive');
-
-
 % make model
-models =  cell(3,1);
-models{1} = EKF(discreteCVmodel(qCV, r));
-models{2} = EKF(discreteCTmodel(qCT, r));
-models{3} = EKF(discreteCVmodel(qCVh, r));
-imm = IMM(models(modIdx), PI);
-tracker = IMMPDAF(imm, lambda, PD, gateSize);
+tracker =  cell(2,1);
+tracker{1} = PDAF(EKF(discreteCVmodel(qCV, r)), lambda, PD, gateSize);
+tracker{2} = PDAF(EKF(discreteCTmodel(qCT, r)), lambda, PD, gateSize);
 
 % allocate
-xbar = zeros(5, M, K);
-Pbar = zeros(5, 5, M, K);
-probbar = zeros(M, K);
-xhat = zeros(5, M, K);
+xbar = zeros(5, K);
+Pbar = zeros(5, 5, K);
 xest = zeros(5, K);
-Pest = zeros(5, 5, K);
-Phat = zeros(5, 5, M, K);
-probhat = zeros(M, K);
+Phat = zeros(5, 5, K);
 NEES = zeros(K, 1);
 NEESpos = zeros(K, 1);
 NEESvel = zeros(K, 1);
 
+s = 2;
 % initialize
-xbar(:, :, 1) = repmat(x0, [1, M]); % simply same for all modes
-Pbar(:, : ,:, 1) = repmat(P0,[1,1,M]); %simply same for all modes
-probbar(:, 1) = sprobs0;
+xbar(:, 1) = x0; % simply same for all modes
+Pbar(:, :, 1) = P0; %simply same for all modes
 
 % filter
 for k=1:K
-    [probhat(:, k), xhat(:, :, k), Phat(:, :, :, k)] = tracker.update(Z{k}, probbar(:, k), xbar(:, :, k), Pbar(:, :, :, k));
-    [xest(:, k), Pest(:, :, k)] =  tracker.imm.estimate(probhat(: , k), xhat(:, :, k ) , Phat(:, :, :, k)); %... total state mean and cov
-    NEES(k) =  (xest(1:4, k) - Xgt(1:4, k))' * (Pest(1:4, 1:4, k )\ (xest(1:4, k) - Xgt(1:4, k)));
-    NEESpos(k) = (xest(1:2, k) - Xgt(1:2, k))' * (Pest(1:2, 1:2, k )\ (xest(1:2, k) - Xgt(1:2, k)));
-    NEESvel(k) = (xest(3:4, k) - Xgt(3:4, k))' * (Pest(3:4, 3:4, k )\ (xest(3:4, k) - Xgt(3:4, k)));
+    [xest(:, k), Phat(:, :, k)] = tracker{s}.update(Z{k}, xbar(:, k), Pbar(:, :, k));
+    NEES(k) =  (xest(1:4, k) - Xgt(1:4, k))' * (Phat(1:4, 1:4, k )\ (xest(1:4, k) - Xgt(1:4, k)));
+    NEESpos(k) = (xest(1:2, k) - Xgt(1:2, k))' * (Phat(1:2, 1:2, k )\ (xest(1:2, k) - Xgt(1:2, k)));
+    NEESvel(k) = (xest(3:4, k) - Xgt(3:4, k))' * (Phat(3:4, 3:4, k )\ (xest(3:4, k) - Xgt(3:4, k)));
     if k < K
-        [probbar(:, k+1), xbar(:, :, k+1), Pbar(:, :, :, k+1)] = tracker.predict(probhat(:, k), xhat(:, :, k), Phat(:, :, :, k), Ts(k));
+        [xbar(:, k+1), Pbar(:, :,k+1)] = tracker{s}.predict(xest(:, k), Phat(:, :,k), Ts(k));
     end
 end
 
@@ -166,13 +152,6 @@ print -depsc plots/task3/a1_task3_states
 
 figure(fignum); clf;
 fignum = fignum + 1;
-plot(probhat');
-legend("CV", "CT", "CVHigh");
-grid on;
-print -depsc plots/task3/a1_task3_mode_prob
-
-figure(fignum); clf;
-fignum = fignum + 1;
 subplot(2,1,1); 
 plot(poserr); grid on;
 ylabel('position error')
@@ -209,6 +188,3 @@ plot([1,K], repmat(ciNEES',[1,2])','r--')
 text(K*1.04, -5, sprintf('%.2f%% inside CI', inCI),'Rotation',90);
 print -depsc plots/task3/a1_task3_NEES
 
-plotallmodecoloredtracks(xest, probhat, fignum);
-print -depsc plots/task3/a1_task3_mode_colored_track
-fignum = fignum + 1;

@@ -85,10 +85,12 @@ if plot_tracked_path
     subplot(2, 1, 2);
     plot(xest(5,:)); hold on; grid on;
     plot(Xgt(5,:));
+    print -depsc plots/task2/a1_task2_tracked_path
 end
 
 if plot_mode_prob_path
     plotmodecoloredtrack(xest, probhat, 1, 67);
+    print -depsc plots/task2/a1_task2_mode_colored_track
 end
 
 
@@ -97,6 +99,7 @@ if plot_mode_prob
     figure(8); clf;
     plot(probhat');
     grid on;
+    print -depsc plots/task2/a1_task2_mode_prob
 end
 
 if plot_error
@@ -107,6 +110,7 @@ if plot_error
     subplot(2,1,2);
     plot(velerr); grid on;
     ylabel('velocity error')
+    print -depsc plots/task2/a1_task2_error
 end
 
 if plot_NEES
@@ -134,6 +138,7 @@ if plot_NEES
     inCI = sum((NEESvel >= ciNEES(1)) .* (NEESvel <= ciNEES(2)))/K * 100;
     plot([1,K], repmat(ciNEES',[1,2])','r--')
     text(104, -5, sprintf('%.2f%% inside CI', inCI),'Rotation',90);
+    print -depsc plots/task2/a1_task2_NEES
 end
 
 if plot_movie
