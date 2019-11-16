@@ -1,0 +1,8 @@
+\subsubsection{Discussion}
+
+\subsubsection{Attitude estimation}
+The attitude estimation for roll and pitch is very precise which makes sense since they are observable using the IMU due to the constant gravity vector. Yaw is however not possible to observe without additional requirements on the measurements. Without any sensor for measuring global heading (i.e compass) we need to get the heading from the planes velocity, which we can estimate from the GNSS measurements \textit{if the plane is moving.} If the velocity vector is zero, we have no information about the direction and can not estimate the heading. 
+
+\
+
+
