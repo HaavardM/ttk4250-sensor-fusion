@@ -14,15 +14,15 @@ dt = mean(IMUTs);
 K = size(zAcc,2);
 %% Measurement noise
 % GNSS Position  measurement
-p_std = 9e-2 * [1, 1 , 2]'; % Measurement noise
+p_std = 0.1 * [1, 1 , 2]'; % Measurement noise
 RGNSS = diag(p_std.^2); % Note: Continuously multiplied with GNNSaccuracy^2
 
 % accelerometer
-qA = (1.167e-3*sqrt(1/dt))^2;% accelerometer measurement noise covariance
+qA = (1.167e-3)^2;% accelerometer measurement noise covariance
 qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
 pAcc = 1e-8; % accelerometer bias reciprocal time constant
 
-qG = (deg2rad(2.5e-3)*sqrt(1/dt))^2; % gyro measurement noise covariance
+qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
 qGb = (8e-6)^2;  % gyro bias driving noise covariance
 pGyro = 1e-8; % gyrp bias reciprocal time constant
 
@@ -50,6 +50,8 @@ Ppred(4:6, 4:6, 1) = (3e-4)^2*eye(3); % vel
 Ppred(7:9, 7:9, 1) = (1e-1*(pi/30))^2 * eye(3); % error rotation (vector (not quat)
 Ppred(10:12, 10:12, 1) = 0.02^2 * eye(3); % acc bias
 Ppred(13:15, 13:15, 1) = (1e-4)^2 * eye(3); % gyro bias
+
+NIS = zeros(1, 3682);
 
 %% run
 N = K;
