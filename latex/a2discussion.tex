@@ -3,6 +3,7 @@
 \subsubsection{Attitude estimation}
 The attitude estimation for roll and pitch is very precise which makes sense since they are observable using the IMU due to the constant gravity vector. Yaw is however not possible to observe without additional requirements on the measurements. Without any sensor for measuring global heading (i.e compass) we need to get the heading from the planes velocity, which we can estimate from the GNSS measurements \textit{if the plane is moving.} If the velocity vector is zero, we have no information about the direction and can not estimate the heading. 
 
-\
+\subsubsection{Neglecting mounting errors}
+The alignment of the IMUs axes and the body frame of the plane is crucial to get a consistent filter. Small errors can be corrected by the IMU bias estimates from the EKF, but it will take some time to converge. The estimates in the beginning will therefore be way off. If used in a control system, this might lead to unacceptable behaviour of the filter. 
 
 
