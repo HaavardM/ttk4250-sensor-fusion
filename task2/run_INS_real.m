@@ -1,11 +1,11 @@
 %% Parameters
-showplt_track = false;
-showplt_estimates = false;
-showplt_nis = false;
-showplt_boxplot = false;
+showplt_track = true;
+showplt_estimates = true;
+showplt_nis = true;
+showplt_boxplot = true;
 showplt_nis_colored_track = true; % Must be true to print
-showplt_ppred_colored_track = false; % Must be true to print
-showplt_covariance = false;
+showplt_ppred_colored_track = true; % Must be true to print
+showplt_covariance = true;
 
 %% Load data
 load task_real;
@@ -13,16 +13,18 @@ IMUTs = diff(timeIMU);
 dt = mean(IMUTs);
 K = size(zAcc,2);
 %% Measurement noise
-% GNSS Position  measurement
-p_std = 9e-2 * [1, 1 , 2]'; % Measurement noise
-RGNSS = diag(p_std.^2); % Note: Continuously multiplied with GNNSaccuracy^2
 
 % accelerometer
-qA = (1.167e-3*sqrt(1/dt))^2;% accelerometer measurement noise covariance
+p_std = (mean(GNSSaccuracy, 2)) * [1, 1 , 1]'; % Measurement noise
+%RGNSS = diag(p_std.^2);
+RGNSS = @(k) diag(((0.20*GNSSaccuracy(k))^2)*[1 1 1]);
+
+% accelerometer
+qA = (1.167e-3)^2;% accelerometer measurement noise covariance
 qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
 pAcc = 1e-8; % accelerometer bias reciprocal time constant
 
-qG = (deg2rad(2.5e-3)*sqrt(1/dt))^2; % gyro measurement noise covariance
+qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
 qGb = (8e-6)^2;  % gyro bias driving noise covariance
 pGyro = 1e-8; % gyrp bias reciprocal time constant
 
@@ -30,8 +32,8 @@ pGyro = 1e-8; % gyrp bias reciprocal time constant
 
 %% Estimator
 eskf = ESKF(qA, qG, qAb, qGb, pAcc, pGyro);
-eskf.Sa = S_a; % set the accelerometer correction matrix
-eskf.Sg = S_g; % set the gyro correction matrix
+eskf.Sa = eye(3)*S_a; % set the accelerometer correction matrix
+eskf.Sg = eye(3)*S_g; % set the gyro correction matrix
 %% Allocate
 xest = zeros(16, K);
 Pest = zeros(15, 15, K);
@@ -51,6 +53,8 @@ Ppred(7:9, 7:9, 1) = (1e-1*(pi/30))^2 * eye(3); % error rotation (vector (not qu
 Ppred(10:12, 10:12, 1) = 0.02^2 * eye(3); % acc bias
 Ppred(13:15, 13:15, 1) = (1e-4)^2 * eye(3); % gyro bias
 
+NIS = zeros(1, 3682);
+
 %% run
 N = K;
 GNSSk = 1;
@@ -61,8 +65,8 @@ for k = 1:N
     end
     
     if timeGNSS(GNSSk) < t
-        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS * GNSSaccuracy(GNSSk)^2, leverarm);
-        [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS, leverarm);
+        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS(GNSSk), leverarm);
+        [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS(GNSSk));
         GNSSk = GNSSk + 1;
     
         if any(any(~isfinite(Pest(:, :, k))))
@@ -74,7 +78,7 @@ for k = 1:N
     end
 
     if k < K
-        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k+1), zGyro(:, k+1), dt);
+        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k+1), zGyro(:, k+1), IMUTs(k));
         
         % Sanity check: Remove for speeeeeeeeeeeeeeeeed
 %         if any(any(~isfinite(Ppred(:, :, k + 1))))
