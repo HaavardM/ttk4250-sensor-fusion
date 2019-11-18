@@ -40,22 +40,31 @@ classdef EKFSLAM
                      x(3) + u(3)];
         end
         
-        function Fx = Fx(~, x, u)
-            Fx = %
+        function Fx = Fx(obj, x, u)
+            Fx = [1, 0, -u(1) * sin(x(3)) - u(2) * cos(x(3)); 
+                  0, 1,  u(1) * cos(x(3)) - u(2) * sin(x(3)); 
+                  0, 0,  1]; 
             
             % check that jacobian is correct, remove for speed
-            if norm(F - jacobianFD(@(X) obj.f(X, u), x, 1e-5), 'fro') > 1e-3
-                error('some error in pred Jac')
+            if obj.checkValues
+                if norm(Fx - jacobianFD(@(X) obj.f(X, u), x, 1e-5), 'fro') > 1e-3
+                    error('some error in pred Jac')
+                end
             end
         end
         
-        function Fu = Fu(~, x, u)
-              Fu = %
+        function Fu = Fu(obj, x, u)
+            Fu = [cos(x(3)), -sin(x(3)), 0; 
+                  cos(x(3)), -cos(x(3)), 0; 
+                  0,          0,         1]; 
               
-              % check that the jacobian is correct, remove for speed
-            if norm(F - jacobianFD(@(U) obj.f(x, U), x, 1e-5), 'fro') > 1e-3
-                error('some error in pred Jac')
-            end            
+            % check that the jacobian is correct, remove for speed
+            if obj.checkValues
+                if norm(Fu - jacobianFD(@(U) obj.f(x, U), u, 1e-5), 'fro') > 1e-3
+                    jacobianFD(@(U) obj.f(x, U), u, 1e-5)
+                    error('some error in pred Jac')
+                end
+            end
         end
         
         function [etapred, P] =  predict(obj, eta, P, zOdo)
