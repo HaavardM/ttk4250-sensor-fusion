@@ -98,13 +98,13 @@ classdef EKFSLAM
             Rot = rotmat2d(-x(3)); % rot from world to body
             
             % cartesian measurement in world
-            z_c = ... - Rot' * obj.sensOffset;
+            z_c = m - x(1:2) - Rot' * obj.sensOffset;
             
             % in body
-            z_b = ...
+            z_b = Rot * z_c;
             
             % polar
-            zpred = ...
+            zpred = [sqrt(sum(z_b.^2, 1)); atan2(z_b(2, :), z_b(1, :))];
             
             % make column again
             zpred = zpred(:); 
