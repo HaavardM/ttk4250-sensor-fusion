@@ -5,9 +5,10 @@ classdef EKFSLAM
         doAsso
         alpha
         sensOffset
+        checkValues
     end
     methods
-        function obj = EKFSLAM(Q, R, doAsso, alphas, sensorOffset)
+        function obj = EKFSLAM(Q, R, doAsso, alphas, sensorOffset, checkValues)
             obj.Q = Q;
             obj.R = R;
             
@@ -24,11 +25,19 @@ classdef EKFSLAM
             if nargin < 5
                 sensorOffset = zeros(2,1);
             end
+            
+            if nargin < 6
+                checkValues = false; 
+            end
+            obj.checkValues = checkValues; 
+            
             obj.sensOffset = sensorOffset(:);
         end
         
         function xpred = f(~, x, u)
-            xpred = %
+            xpred = [x(1) + u(1) * cos(x(3)) - u(2) * sin(x(3));
+                     x(2) + u(1) * sin(x(3)) + u(2) * cos(x(3));
+                     x(3) + u(3)];
         end
         
         function Fx = Fx(~, x, u)
