@@ -32,8 +32,8 @@ pGyro = 1e-8; % gyrp bias reciprocal time constant
 
 %% Estimator
 eskf = ESKF(qA, qG, qAb, qGb, pAcc, pGyro);
-eskf.Sa = S_a; % set the accelerometer correction matrix
-eskf.Sg = S_g; % set the gyro correction matrix
+eskf.Sa = eye(3)*S_a; % set the accelerometer correction matrix
+eskf.Sg = eye(3)*S_g; % set the gyro correction matrix
 %% Allocate
 xest = zeros(16, K);
 Pest = zeros(15, 15, K);

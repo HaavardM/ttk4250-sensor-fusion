@@ -1,8 +1,8 @@
 clear all; close all;
 %% Parameters
-showplt_gnss = false;
-showplt_estimates = false;
-showplt_state_errors = false;
+showplt_gnss = true;
+showplt_estimates = true;
+showplt_state_errors = true;
 showplt_error_distance = false;
 showplt_nees = true;
 showplt_boxplot = false;

@@ -1,9 +1,19 @@
-\subsubsection{Discussion}
+\subsection{Discussion}
+This sections contains some thoughts on ESKF from tuning the filter for the simulated and the real dataset.
 
-\subsubsection{Attitude estimation}
-The attitude estimation for roll and pitch is very precise which makes sense since they are observable using the IMU due to the constant gravity vector. Yaw is however not possible to observe without additional requirements on the measurements. Without any sensor for measuring global heading (i.e compass) we need to get the heading from the planes velocity, which we can estimate from the GNSS measurements \textit{if the plane is moving.} If the velocity vector is zero, we have no information about the direction and can not estimate the heading. 
+\subsubsection{NIS}
+Interesting to note about the NIS, are the seemingly periodic spikes that leave the confidence interval. By superimposing the NIS value over the 2D-projected AUV trajectory, like shown in figure \ref{fig:nis_colored_track} for the real dataset, it is evident that the spikes appear when the AUV is turning. This most likely stems from the fact that turns are non-linear motion, and the ESKF uses a linearization model. We also note the large spike in NIS early in figure \ref{fig:nis_basic}. This spike appears at $t=206s$, right as the AUV is catapulted into the air, as such it is natural to expect a large innovation value. When tuning the noise parameters we therefore have to balance the NIS between the different behaviours and it is difficult to get a "one-fits-all" solution, if not impossible. 
 
-\subsubsection{Neglecting mounting errors}
-The alignment of the IMUs axes and the body frame of the plane is crucial to get a consistent filter. Small errors can be corrected by the IMU bias estimates from the EKF, but it will take some time to converge. The estimates in the beginning will therefore be way off. If used in a control system, this might lead to unacceptable behaviour of the filter. 
+\subsubsection{Attitude estimation (task 3B)}
+The attitude estimation for roll and pitch is very precise which makes sense since they are observable using the IMU due to the constant gravity vector. Yaw is however not possible to observe without additional requirements on the measurements. Without any sensor for measuring global heading (i.e compass) we need to get the heading from the velocity, which we can estimate from the GNSS measurements \textit{if the plane is moving.} If the velocity vector is zero, we have no information about the direction and can not estimate the heading. (i.e lack of suffecient exciation) 
+
+\subsubsection{IMU Mounting errors (task 3C and 4B)}
+We hypothesied that the attitude will, given enough time, converge toward the true attitude \textit{of the IMU} even if there are mounting errors. We reasonded that any IMU mounting errors would lead to similar behaviour as for wrong initial conditions with the only difference being an additional offset in attitude. As long as the orietation of the IMU in the world frame is known, the mounting error should not affect other states of the ESKF. 
+To confirm our suspicion we tried to introduce a large mounting error by rotating $S_a$ and $S_g$ to a $90^\circ$ offset in roll. We then initalized the filter to the true attitude of the IMU, by adding the same offset in roll to the initial attitude.
+The ESKF worked well and the only error was the expected $90^\circ$ offset in roll. We therefore conclude that any mounting errors of the IMU does not fundamentally cause other errors than constant attitude offset compared to ground truth, but it can be very slow to converge if initialized incorrectly. Large erros should therefore be corrected, but small errors should be safe to ignore if absolute attitude estimates for the body frame is not neccessary (some may only be interested in position and velocity).   
+
+Misalignment of the coordinate axes of the IMU from manufacturing is however a bit worse since we then have correlation between the different axis and we need to correct this as much as possible to avoid estimation errors. When setting the correction matrix to the identity matrix we saw increased error in the filter and reduction in consistency.  
+
+
 
 

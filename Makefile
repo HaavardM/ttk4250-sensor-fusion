@@ -9,6 +9,7 @@ task2:
 build-pdf: task1 task2
 	mkdir -p latex/build
 	cd latex  && pdflatex --output-directory ./build ov.tex
+	cd latex  && pdflatex --output-directory ./build ov.tex
 	cp latex/build/ov.pdf results.pdf
 clean:
 	rm -rf latex/build
