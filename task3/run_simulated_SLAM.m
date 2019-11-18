@@ -1,11 +1,12 @@
 load simulatedSLAM;
 K = numel(z);
-%%
-Q = ...
-R = ...
+%% Come on and slam
+Q = 2e-1^2 * eye(3);
+R = 1e-1^2 * eye(2);
 doAsso = true;
-JCBBalphas = [..., ...] % first is for joint compatibility, second is individual 
-slam = EKFSLAM(Q, R, doAsso, JCBBalphas);
+checkValues = true;
+JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
+slam = EKFSLAM(Q, R, doAsso, JCBBalphas, zeros(2, 1), checkValues);
 
 % allocate
 xpred = cell(1, K);
@@ -18,12 +19,15 @@ a = cell(1, K);
 xpred{1} = poseGT(:,1); % we start at the correct position for reference
 Ppred{1} = zeros(3, 3); % we also say that we are 100% sure about that
 
-
+%% Welcome to the jam
 figure(10); clf;
 axAsso = gca;
 N = K;
 doAssoPlot = true; % set to true to se the associations that are done
 for k = 1:N
+    if ~ mod(k, 10)
+        fprintf(1, "Completed %d/%d timesteps\n", k, K);
+    end
     [xhat{k}, Phat{k}, NIS(k), a{k}] =  slam.update(xpred{k}, Ppred{k}, z{k});
     if k < K
         [xpred{k + 1}, Ppred{k + 1}] = slam.predict(xhat{k}, Phat{k}, odometry(:, k));
@@ -44,7 +48,6 @@ for k = 1:N
         
         legend(axAsso, 'z', 'zbar', 'a')
         title(axAsso, sprintf('k = %d: %s', k, sprintf('%d, ',a{k})));
-        pause();
     end
 end
 
