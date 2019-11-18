@@ -68,27 +68,29 @@ classdef EKFSLAM
         end
         
         function [etapred, P] =  predict(obj, eta, P, zOdo)
-            x = eta(1:3); % pose
-            m = eta(4:end); % map
+            % separate pose and landmarks
+            x = eta(1:3);
+            m = eta(4:end);
             
-            xpred = %
-            Fx = %
-            Fu = %
-            
-            % in place for performance
-            P(1:3, 1:3) = %
-            P(1:3, 4:end) = % 
-            P(4:end, 1:3) = % 
-            
-            % concatenate pose and landmarks again
+            % (11.19 a)
+            xpred = obj.f(x, zOdo);            
             etapred = [xpred; m];
+                 
+            % (11.19 b)
+            Fx = obj.Fx(x, zOdo);
+            Fu = obj.Fu(x, zOdo); % Unused, why?
+            P(1:3, 1:3) = Fx*P(1:3, 1:3)*Fx' + obj.Q; % Maybe add Fu*Q*Fu' instead??
+            P(1:3, 4:end) = Fx*P(1:3, 4:end);
+            P(4:end, 1:3) = P(4:end, 1:3)*Fx';
             
             % check that the covariance makes sense
-            if any(eig(Ppred) <= 0) % costly, remove when tested
-                warn('EKFpredict got cov not PSD')
+            if obj.checkValues
+                if any(eig(P) <= 0) % costly, remove when tested
+                    warn('EKFpredict got cov not PSD')
+                end
             end
         end
-        
+
         function zpred = h(obj, eta)
             x = eta(1:3); % pose 
             m = reshape(eta(4:end), 2 ,[]); % map (2 x m now)
