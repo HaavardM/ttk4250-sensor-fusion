@@ -1,11 +1,11 @@
 %% Parameters
-showplt_track = false;
-showplt_estimates = false;
-showplt_nis = false;
-showplt_boxplot = false;
+showplt_track = true;
+showplt_estimates = true;
+showplt_nis = true;
+showplt_boxplot = true;
 showplt_nis_colored_track = true; % Must be true to print
-showplt_ppred_colored_track = false; % Must be true to print
-showplt_covariance = false;
+showplt_ppred_colored_track = true; % Must be true to print
+showplt_covariance = true;
 
 %% Load data
 load task_real;
@@ -13,9 +13,11 @@ IMUTs = diff(timeIMU);
 dt = mean(IMUTs);
 K = size(zAcc,2);
 %% Measurement noise
-% GNSS Position  measurement
-p_std = 0.1 * [1, 1 , 2]'; % Measurement noise
-RGNSS = diag(p_std.^2); % Note: Continuously multiplied with GNNSaccuracy^2
+
+% accelerometer
+p_std = (mean(GNSSaccuracy, 2)) * [1, 1 , 1]'; % Measurement noise
+%RGNSS = diag(p_std.^2);
+RGNSS = @(k) diag(((0.20*GNSSaccuracy(k))^2)*[1 1 1]);
 
 % accelerometer
 qA = (1.167e-3)^2;% accelerometer measurement noise covariance
@@ -63,8 +65,8 @@ for k = 1:N
     end
     
     if timeGNSS(GNSSk) < t
-        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS * GNSSaccuracy(GNSSk)^2, leverarm);
-        [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS, leverarm);
+        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS(GNSSk), leverarm);
+        [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS(GNSSk));
         GNSSk = GNSSk + 1;
     
         if any(any(~isfinite(Pest(:, :, k))))
@@ -76,7 +78,7 @@ for k = 1:N
     end
 
     if k < K
-        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k+1), zGyro(:, k+1), dt);
+        [xpred(:, k+1),  Ppred(:, :, k+1)] = eskf.predict(xest(:, k), Pest(:, :, k), zAcc(:, k+1), zGyro(:, k+1), IMUTs(k));
         
         % Sanity check: Remove for speeeeeeeeeeeeeeeeed
 %         if any(any(~isfinite(Ppred(:, :, k + 1))))
