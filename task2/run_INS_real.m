@@ -17,16 +17,16 @@ K = size(zAcc,2);
 % accelerometer
 p_std = (mean(GNSSaccuracy, 2)) * [1, 1 , 1]'; % Measurement noise
 %RGNSS = diag(p_std.^2);
-RGNSS = @(k) diag(((0.20*GNSSaccuracy(k))^2)*[1 1 1]);
+RGNSS = @(k) diag((((0.2^2)*GNSSaccuracy(k))^2)*[1^2 1^2 1.6^2]);
 
 % accelerometer
-qA = (1.167e-3)^2;% accelerometer measurement noise covariance
-qAb = (1.5e-3)^2; % accelerometer bias driving noise covariance
-pAcc = 1e-8; % accelerometer bias reciprocal time constant
+qA = (1.167e-3 * sqrt(1 / dt))^2;% accelerometer measurement noise covariance
+qAb = (2.2e-3)^2; % accelerometer bias driving noise covariance
+pAcc = 1e-3; % accelerometer bias reciprocal time constant
 
-qG = (deg2rad(2.5e-3))^2; % gyro measurement noise covariance
-qGb = (8e-6)^2;  % gyro bias driving noise covariance
-pGyro = 1e-8; % gyrp bias reciprocal time constant
+qG = (deg2rad(2.5e-3 * sqrt(1 / dt)))^2; % gyro measurement noise covariance
+qGb = (1.2e-5)^2;  % gyro bias driving noise covariance
+pGyro = 1e-3; % gyrp bias reciprocal time constant
 
 
 
@@ -53,7 +53,7 @@ Ppred(7:9, 7:9, 1) = (1e-1*(pi/30))^2 * eye(3); % error rotation (vector (not qu
 Ppred(10:12, 10:12, 1) = 0.02^2 * eye(3); % acc bias
 Ppred(13:15, 13:15, 1) = (1e-4)^2 * eye(3); % gyro bias
 
-NIS = zeros(1, 3682);
+NIS = zeros(3, 3682);
 
 %% run
 N = K;
@@ -65,7 +65,7 @@ for k = 1:N
     end
     
     if timeGNSS(GNSSk) < t
-        NIS(GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS(GNSSk), leverarm);
+        NIS(:, GNSSk) = eskf.NISGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS(GNSSk), leverarm);
         [xest(:, k), Pest(:, :, k)] = eskf.updateGNSS(xpred(:, k), Ppred(:, :, k), zGNSS(:, GNSSk), RGNSS(GNSSk));
         GNSSk = GNSSk + 1;
     
@@ -146,12 +146,27 @@ end
 alpha = 0.05;
 CI3 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 3);
 clf;
-plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS);
+subplot(3,1,1);
+plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(1, :));
 grid on;
 hold on;
 plot([0, timeIMU(N) - timeIMU(1)], (CI3*ones(1,2))', 'r--');
-insideCI = mean((CI3(1) <= NIS).* (NIS <= CI3(2)));
+insideCI = mean((CI3(1) <= NIS(1, :)).* (NIS(1, :) <= CI3(2)));
 title(sprintf('NIS (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+subplot(3,1,2);
+plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(2, :));
+grid on;
+hold on;
+plot([0, timeIMU(N) - timeIMU(1)], (CI3*ones(1,2))', 'r--');
+insideCI = mean((CI3(1) <= NIS(2, :)).* (NIS(2, :) <= CI3(2)));
+title(sprintf('NIS planar (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+subplot(3,1,3);
+plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(3, :));
+grid on;
+hold on;
+plot([0, timeIMU(N) - timeIMU(1)], (CI3*ones(1,2))', 'r--');
+insideCI = mean((CI3(1) <= NIS(3, :)).* (NIS(3, :) <= CI3(2)));
+title(sprintf('NIS altitude (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
 printplot(fig3, "a2-real-nis.pdf");
 
 if exist('showplt_boxplot') && showplt_boxplot
