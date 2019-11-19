@@ -109,3 +109,5 @@ scatter(eta(4:2:end), eta(5:2:end), 'rx');
 % measurements? 
 figure(3); clf;
 plot(NIS);
+title("NIS/num(assoc measurements)");
+xlabel("Timestep");

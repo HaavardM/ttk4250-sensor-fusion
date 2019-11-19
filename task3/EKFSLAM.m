@@ -227,7 +227,7 @@ classdef EKFSLAM
                 % Kalman update
                 W = P*H' / S; 
                 etaupd = eta + W*v; 
-                NIS = v' / S*v; 
+                NIS = (v' * (S \ v))/numel(za);
                 Pupd = (eye(size(P)) - W*H)*P; 
                 
                 % sanity check, remove for speed
