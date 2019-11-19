@@ -17,7 +17,7 @@ K = size(zAcc,2);
 % accelerometer
 p_std = (mean(GNSSaccuracy, 2)) * [1, 1 , 1]'; % Measurement noise
 %RGNSS = diag(p_std.^2);
-RGNSS = @(k) diag((((0.2^2)*GNSSaccuracy(k))^2)*[1^2 1^2 1.6^2]);
+RGNSS = @(k) diag((((0.3^2)*GNSSaccuracy(k))^2)*[0.9^2 0.9^2 1.6^2]);
 
 % accelerometer
 qA = (1.167e-3 * sqrt(1 / dt))^2;% accelerometer measurement noise covariance
@@ -145,6 +145,8 @@ else
 end
 alpha = 0.05;
 CI3 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 3);
+CI1 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 1);
+CI2 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 2);
 clf;
 subplot(3,1,1);
 plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(1, :));
@@ -157,15 +159,15 @@ subplot(3,1,2);
 plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(2, :));
 grid on;
 hold on;
-plot([0, timeIMU(N) - timeIMU(1)], (CI3*ones(1,2))', 'r--');
-insideCI = mean((CI3(1) <= NIS(2, :)).* (NIS(2, :) <= CI3(2)));
+plot([0, timeIMU(N) - timeIMU(1)], (CI2*ones(1,2))', 'r--');
+insideCI = mean((CI2(1) <= NIS(2, :)).* (NIS(2, :) <= CI2(2)));
 title(sprintf('NIS planar (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
 subplot(3,1,3);
 plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(3, :));
 grid on;
 hold on;
-plot([0, timeIMU(N) - timeIMU(1)], (CI3*ones(1,2))', 'r--');
-insideCI = mean((CI3(1) <= NIS(3, :)).* (NIS(3, :) <= CI3(2)));
+plot([0, timeIMU(N) - timeIMU(1)], (CI1*ones(1,2))', 'r--');
+insideCI = mean((CI1(1) <= NIS(3, :)).* (NIS(3, :) <= CI1(2)));
 title(sprintf('NIS altitude (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
 printplot(fig3, "a2-real-nis.pdf");
 
@@ -174,8 +176,8 @@ if exist('showplt_boxplot') && showplt_boxplot
 else
     figure('visible', 'off'); clf;
 end
-gaussCompare = sum(randn(3, numel(NIS)).^2, 1);
-boxplot([NIS', gaussCompare'],'notch','on',...
+gaussCompare = sum(randn(3, numel(NIS(1, :))).^2, 1);
+boxplot([NIS(1, :)', gaussCompare'],'notch','on',...
         'labels',{'NIS','gauss'});
 grid on;
 printplot(gcf, "a2-real-boxplot.pdf");
