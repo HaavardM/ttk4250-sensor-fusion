@@ -1,50 +1,53 @@
 load simulatedSLAM;
 K = numel(z);
-%%
-Q = ...
-R = ...
+%% Come on and slam
+Q = 2e-1^2 * eye(3);
+R = 1e-1^2 * eye(2);
 doAsso = true;
-JCBBalphas = [..., ...] % first is for joint compatibility, second is individual 
-slam = EKFSLAM(Q, R, doAsso, JCBBalphas);
+checkValues = true;
+JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
+slam = EKFSLAM(Q, R, doAsso, JCBBalphas, zeros(2, 1), checkValues);
 
 % allocate
-xpred = cell(1, K);
+etapred = cell(1, K); % Cell array of etas
 Ppred = cell(1, K);
-xhat = cell(1, K);
+etahat = cell(1, K);
 Phat = cell(1, K);
 a = cell(1, K);
 
 % init
-xpred{1} = poseGT(:,1); % we start at the correct position for reference
+etapred{1} = poseGT(:,1); % we start at the correct position for reference
 Ppred{1} = zeros(3, 3); % we also say that we are 100% sure about that
 
-
+%% Welcome to the jam
 figure(10); clf;
 axAsso = gca;
 N = K;
 doAssoPlot = true; % set to true to se the associations that are done
 for k = 1:N
-    [xhat{k}, Phat{k}, NIS(k), a{k}] =  slam.update(xpred{k}, Ppred{k}, z{k});
+    if ~ mod(k, 10)
+        fprintf(1, "Completed %d/%d timesteps\n", k, K);
+    end
+    [etahat{k}, Phat{k}, NIS(k), a{k}] =  slam.update(etapred{k}, Ppred{k}, z{k});
     if k < K
-        [xpred{k + 1}, Ppred{k + 1}] = slam.predict(xhat{k}, Phat{k}, odometry(:, k));
+        [etapred{k + 1}, Ppred{k + 1}] = slam.predict(etahat{k}, Phat{k}, odometry(:, k));
     end
     
     
     % checks
-    if size(xhat{k},1) ~= size(Phat{k},1)
+    if size(etahat{k},1) ~= size(Phat{k},1)
         error('dimensions of mean and covariance do not match')
     end
     
     if doAssoPlot && k > 1 %&& any(a{k} == 0) % uncoment last part to only see new creations
         cla(axAsso); hold on;grid  on;
-        zpred = reshape(slam.h(xpred{k}), 2, []);
+        zpred = reshape(slam.h(etapred{k}), 2, []);
         scatter(axAsso, z{k}(1, :), z{k}(2, :));
         scatter(axAsso, zpred(1, :), zpred(2, :));
         plot(axAsso, [z{k}(1, a{k}>0); zpred(1, a{k}(a{k}>0))], [z{k}(2, a{k}>0); zpred(2, a{k}(a{k}>0))], 'r', 'linewidth', 2)
         
         legend(axAsso, 'z', 'zbar', 'a')
         title(axAsso, sprintf('k = %d: %s', k, sprintf('%d, ',a{k})));
-        pause();
     end
 end
 
@@ -56,17 +59,17 @@ clf;
 hold on;
 
 scatter(landmarks(1,:), landmarks(2,:), 'r^')
-scatter(xhat{k}(4:2:end), xhat{k}(5:2:end), 'b.')
+scatter(etahat{k}(4:2:end), etahat{k}(5:2:end), 'b.')
 
 lh1 = plot(poseGT(1, 1:k), poseGT(2,1:k), 'r', 'DisplayName', 'gt');
-lh2 = plot(cellfun(@(x) x(1), xhat), cellfun(@(x) x(2), xhat), 'b', 'DisplayName', 'est');
+lh2 = plot(cellfun(@(x) x(1), etahat), cellfun(@(x) x(2), etahat), 'b', 'DisplayName', 'est');
 
-el = ellipse(xhat{k}(1:2),Phat{k}(1:2,1:2),5,200);
+el = ellipse(etahat{k}(1:2),Phat{k}(1:2,1:2),5,200);
 plot(el(1,:),el(2,:),'b');
 
 for ii=1:((size(Phat{k}, 1)-3)/2)
    rI = squeeze(Phat{k}(3+[1,2]+(ii-1)*2,3+[1,2]+(ii-1)*2));
-   el = ellipse(xhat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
+   el = ellipse(etahat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
    plot(el(1,:),el(2,:),'b');
 end
 
@@ -137,18 +140,18 @@ ax = gca;
 for k = 1:N
     cla(ax); hold on;
     scatter(ax, landmarks(1,:), landmarks(2,:), 'r^')
-    scatter(ax, xhat{k}(4:2:end), xhat{k}(5:2:end), 'b*')
+    scatter(ax, etahat{k}(4:2:end), etahat{k}(5:2:end), 'b*')
     plot(ax, poseGT(1, 1:k), poseGT(2,1:k), 'r-o','markerindices',10:10:k);
-    plot(ax, cellfun(@(x) x(1), xhat(1:k)), cellfun(@(x) x(2), xhat(1:k)), 'b-o','markerindices',10:10:k);
+    plot(ax, cellfun(@(x) x(1), etahat(1:k)), cellfun(@(x) x(2), etahat(1:k)), 'b-o','markerindices',10:10:k);
     
     if k > 1 % singular cov at k = 1
-        el = ellipse(xhat{k}(1:2),Phat{k}(1:2,1:2),5,200);
+        el = ellipse(etahat{k}(1:2),Phat{k}(1:2,1:2),5,200);
         plot(ax,el(1,:),el(2,:),'b');
     end
     
     for ii=1:((size(Phat{k}, 1)-3)/2)
        rI = squeeze(Phat{k}(3+[1,2]+(ii-1)*2,3+[1,2]+(ii-1)*2)); 
-       el = ellipse(xhat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
+       el = ellipse(etahat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
        plot(ax, el(1,:),el(2,:),'b');
     end
     
