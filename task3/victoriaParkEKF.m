@@ -17,13 +17,13 @@ car.a = 0.95; % laser distance in front of first axel
 car.b = 0.5; % laser distance to the left of center
 
 % the SLAM parameters
-sigmas = ...
+sigmas = [2e-1^2 , 2e-1^2 , 2e-1^2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
 Q = diag(sigmas) * [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1] * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = ...
+R = 1e-1^2 * eye(2);
 
-JCBBalphas = [..., ...]; % first is for joint compatibility, second is individual 
+JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
 slam = EKFSLAM(Q, R, true, JCBBalphas, sensorOffset);
 
@@ -50,6 +50,7 @@ shLmk = scatter(ax, nan, nan, 'rx');
 shZ = scatter(ax, nan, nan, 'bo');
 th = title(ax, 'start');
 
+%% Slam dunk
 for k = 1:N
     if mk < mK && timeLsr(mk) <= timeOdo(k+1)
         dt = timeLsr(mk) - t;
