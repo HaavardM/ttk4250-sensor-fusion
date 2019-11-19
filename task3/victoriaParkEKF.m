@@ -17,11 +17,11 @@ car.a = 0.95; % laser distance in front of first axel
 car.b = 0.5; % laser distance to the left of center
 
 % the SLAM parameters
-sigmas = [2e-1^2 , 2e-1^2 , 2e-1^2];
+sigmas = [4e-2 , 4e-2 , 4e-2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
 Q = diag(sigmas) * [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1] * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = 1e-1^2 * eye(2);
+R = 1e-2 * eye(2);
 
 JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
@@ -48,10 +48,10 @@ doPlot = true;
 figure(1); clf;  hold on; grid on; axis equal;
 ax = gca;
 % cheeper to update plot data than to create new plot objects
-lhPose = plot(ax, eta(1), eta(2), 'k');
 scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
 shLmk = scatter(ax, nan, nan, 'rx');
 shZ = scatter(ax, nan, nan, 'bo');
+lhPose = plot(ax, eta(1), eta(2), 'k', 'LineWidth', 2);
 th = title(ax, 'start');
 
 %% Slam dunk
@@ -99,15 +99,14 @@ for k = 1:N
     end
 end
 
-%% 
+%% Plot results
 figure(2); clf;  hold on; grid on; axis equal;
 plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
 scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
 scatter(eta(4:2:end), eta(5:2:end), 'rx');
 
-% what can we do with consistency..? divide by the number of associated
-% measurements? 
+%% Plot NIS
 figure(3); clf;
-plot(NIS);
-title("NIS/num(assoc measurements)");
-xlabel("Timestep");
+plot(NIS); hold on;
+line([1, numel(NIS)],[1,1], 'Color', 'red', 'LineStyle', '--')
+title("NIS divided by chi2 upper bound");

@@ -227,7 +227,9 @@ classdef EKFSLAM
                 % Kalman update
                 W = P*H' / S; 
                 etaupd = eta + W*v; 
-                NIS = (v' * (S \ v))/numel(za);
+                CI_alpha = 0.05;
+                CI = chi2inv([CI_alpha/2; 1 - CI_alpha/2; 0.5], numel(v));
+                NIS = (v' * (S \ v))/CI(2); % Normalize NIS by upper CI bound
                 Pupd = (eye(size(P)) - W*H)*P; 
                 
                 % sanity check, remove for speed
