@@ -1,6 +1,8 @@
 \subsection{Discussion}
 This sections contains some thoughts on ESKF from tuning the filter for the simulated and the real dataset.
 
+
+
 \subsubsection{NIS}
 Interesting to note about the NIS, are the seemingly periodic spikes that leave the confidence interval. By superimposing the NIS value over the 2D-projected AUV trajectory, like shown in figure \ref{fig:nis_colored_track} for the real dataset, it is evident that the spikes appear when the AUV is turning. This most likely stems from the fact that turns are non-linear motion, and the ESKF uses a linearization model. We also note the large spike in NIS early in figure \ref{fig:nis_basic}. This spike appears at $t=206s$, right as the AUV is catapulted into the air, as such it is natural to expect a large innovation value. When tuning the noise parameters we therefore have to balance the NIS between the different behaviours and it is difficult to get a "one-fits-all" solution, if not impossible. 
 
