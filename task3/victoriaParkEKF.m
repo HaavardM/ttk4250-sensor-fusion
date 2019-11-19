@@ -32,7 +32,10 @@ xupd = zeros(3, mK);
 a = cell(1, mK);
 
 % initialize TWEAK THESE TO BETTER BE ABLE TO COMPARE TO GPS
-eta = [Lo_m(1); La_m(2); 30 * pi /180]; % set the start to be relatable to GPS. 
+init_angle = 37;
+init_offset_x = -1;
+init_offset_y = 0;
+eta = [Lo_m(1) + init_offset_x; La_m(2) + init_offset_y; init_angle * pi /180]; % set the start to be relatable to GPS. 
 P = zeros(3,3); % we say that we start knowing where we are in our own local coordinates
 
 mk = 2; % first seems to be a bit off in timing
@@ -46,6 +49,7 @@ figure(1); clf;  hold on; grid on; axis equal;
 ax = gca;
 % cheeper to update plot data than to create new plot objects
 lhPose = plot(ax, eta(1), eta(2), 'k');
+scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
 shLmk = scatter(ax, nan, nan, 'rx');
 shZ = scatter(ax, nan, nan, 'bo');
 th = title(ax, 'start');
