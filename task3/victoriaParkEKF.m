@@ -21,7 +21,7 @@ sigmas = [4e-2 , 4e-2 , 4e-2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
 Q = diag(sigmas) * [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1] * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = 1e-2 * eye(2);
+R = diag([1e-2, 1e-2]);
 
 JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
@@ -68,6 +68,7 @@ for k = 1:N
         z = detectTreesI16(LASER(mk,:));
         [eta, P, NIS(k), a{k}] = slam.update(eta, P, z);
         xupd(:, mk) = eta(1:3); 
+        NISmk(mk) = NIS(k);
         mk = mk + 1;
         if doPlot
             lhPose.XData = [lhPose.XData, eta(1)];
@@ -107,6 +108,11 @@ scatter(eta(4:2:end), eta(5:2:end), 'rx');
 
 %% Plot NIS
 figure(3); clf;
-plot(NIS); hold on;
-line([1, numel(NIS)],[1,1], 'Color', 'red', 'LineStyle', '--')
-title("NIS divided by chi2 upper bound");
+plot(NISmk); hold on;
+line([1, numel(NISmk)],[1,1], 'Color', 'red', 'LineStyle', '--')
+line([1, numel(NISmk)],[0,0], 'Color', 'red', 'LineStyle', '--')
+insideCI = round(100*mean((0 <= NISmk).* (NISmk <= 1))); % NIS scaled to be between 0 and 1
+title(sprintf("NIS divided by chi2 upper bound (%d percent inside 95-CI)", insideCI));
+
+%% Plot NIS-colored track
+plotcoloredtrack(xupd(1:2, 1:(mk-1)) + 2, NISmk, "NIS colored track", 3, 4);

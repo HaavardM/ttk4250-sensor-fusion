@@ -229,7 +229,7 @@ classdef EKFSLAM
                 etaupd = eta + W*v; 
                 CI_alpha = 0.05;
                 CI = chi2inv([CI_alpha/2; 1 - CI_alpha/2; 0.5], numel(v));
-                NIS = (v' * (S \ v))/CI(2); % Normalize NIS by upper CI bound
+                NIS = (v' * (S \ v) - CI(1))/(CI(2) - CI(1)); % Normalize NIS by upper CI bound
                 Pupd = (eye(size(P)) - W*H)*P; 
                 
                 % sanity check, remove for speed
