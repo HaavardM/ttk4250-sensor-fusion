@@ -1,6 +1,8 @@
 \subsection{Discussion}
 This sections contains some thoughts on ESKF from tuning the filter for the simulated and the real dataset.
 
+
+
 \subsubsection{NIS}
 Interesting to note about the NIS, are the seemingly periodic spikes that leave the confidence interval. By superimposing the NIS value over the 2D-projected AUV trajectory, like shown in figure \ref{fig:nis_colored_track} for the real dataset, it is evident that the spikes appear when the AUV is turning. This most likely stems from the fact that turns are non-linear motion, and the ESKF uses a linearization model. We also note the large spike in NIS early in figure \ref{fig:nis_basic}. This spike appears at $t=206s$, right as the AUV is catapulted into the air, as such it is natural to expect a large innovation value. When tuning the noise parameters we therefore have to balance the NIS between the different behaviours and it is difficult to get a "one-fits-all" solution, if not impossible. 
 
@@ -12,7 +14,7 @@ We hypothesied that the attitude will, given enough time, converge toward the tr
 To confirm our suspicion we tried to introduce a large mounting error by rotating $S_a$ and $S_g$ to a $90^\circ$ offset in roll. We then initalized the filter to the true attitude of the IMU, by adding the same offset in roll to the initial state.
 The ESKF worked well and the only error was the expected $90^\circ$ constant offset in roll. We therefore conclude that any mounting errors of the IMU does not fundamentally cause errors other than constant attitude offset compared to ground truth. It will however be very slow to converge if initialized incorrectly, so large erros should therefore be corrected. Small errors should be safe to ignore if absolute attitude estimates for the body frame is not neccessary (some may only be interested in position and velocity).   
 
-Misalignment of the coordinate axes of the IMU from manufacturing is however a bit worse since we then have correlation between the different axis and we need to correct this as much as possible to avoid estimation errors. When setting the correction matrix to the identity matrix we saw increased error in the filter and reduction in consistency.  
+Misalignment of the coordinate axes of the IMU from manufacturing is however a bit worse since we then have correlation between the different axis. Acceleration in one axis will"contaminate" the measurements for the misaligned axis and therefore violate the assumption that the IMU sensor noise is white (we no longer get zero mean due to the added contamination from the misaligned axis). It is therefore important to correct for misaligned errors as much as possible. When setting the correction matrix to the identity matrix we saw increased error in the filter and reduction in consistency.  
 
 
 
