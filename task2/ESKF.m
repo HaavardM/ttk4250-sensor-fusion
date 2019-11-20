@@ -309,7 +309,7 @@ classdef ESKF
                 leverarm = zeros(3,1);
             end
             [innov, S] = obj.innovationGNSS(xnom, P, zGNSSpos, RGNSSpos, leverarm);
-            NIS = innov' * (S \ innov);
+            NIS = [(innov' * (S \ innov)); (innov(1:2)' * (S(1:2, 1:2) \ innov(1:2))); (innov(3)' * (S(3,3) \ innov(3)))];
         end
         
         function deltaX = deltaX(~, xnom, xtrue)
