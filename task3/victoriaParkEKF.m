@@ -9,6 +9,9 @@ timeGps = timeGps/1000;
 K = numel(timeOdo);
 mK = numel(timeLsr);
 
+%% View lsr
+viewLsr();
+
 %% Parameters
 % the car parameters
 car.L = 2.83; % axel distance
@@ -17,11 +20,11 @@ car.a = 0.95; % laser distance in front of first axel
 car.b = 0.5; % laser distance to the left of center
 
 % the SLAM parameters
-sigmas = [4e-2 , 4e-2 , 4e-2];
+sigmas = [5e-3 , 5e-3 , 2e-2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
 Q = diag(sigmas) * [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1] * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = diag([1e-2, 1e-2]);
+R = diag([3e-3, 3e-3]);
 
 JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
