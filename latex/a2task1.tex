@@ -1,5 +1,5 @@
 \subsection{ESKF}
-The human brain is brilliant filter fusing multiple senses together to create what we percieve. We rely on multiple senses to be able to know if we are falling or to know where we are. 
+The human brain is a brilliant filter fusing multiple senses together to create what we percieve. We rely on multiple senses to be able to know if we are falling or to know where we are. 
 Robots have the same need when navigating and we do not have any single perfect sensor that can fully provide us with the robots pose at any time. We therefore want to create a filter to fuse multiple sources of data together to create an estimate for our robot, similar to how our brain create our perception.
 
 We will therefore develop the \texttt{error state kalman filter} (ESKF) to estimate the location and orientation of an aeroplane using intertial navigation. The plane use an \texttt{intertial measurement unit} (IMU) to sense acceleration and rotation rate using accelerometer and gyroscope. Similar to a human with his/her eyes closed, the filter is able to predict pose using only the IMU if the prior state is known, but with an increasing error (and corresponding uncertianty). We will therefore also use a GNSS receiver to update our estimate when we receive new measurements. 

@@ -1,11 +1,8 @@
-\begin{align}
-        RGNSS &= (0.29)^2\begin{bmatrix}
-    1^2 & 0 & 0 \\
-    0 & 1^2 & 0 \\
-    0 & 0 & 1.6^2
-\end{bmatrix} & q_a &= (1.167 \cdot 10^{-3})^2 * 100Hz \label{eq:eskf-sim-tuning1} \\
-        q_{ab} &= (2.2 \cdot 10^{-3})^2 & p_{ab} &= 10^{-3} \label{eq:eskf-sim-tuning2} \\
-        q_\omega &= deg2rad((2.5 \cdot 10^{-3})^\circ)^2 * 100Hz  & q_{\omega b} &= (1.2 \cdot 10^{-5})^2 \label{eq:eskf-sim-tuning3} \\
-        p_{\omega b} &= 10^{-3} \label{eq:eskf-sim-tuning4}
-\end{align}
+\begin{tcolorbox}[ams align, title={ESKF tuning parameters for simulated data}]
+        RGNSS &= (0.29)^2\begin{bmatrix} 1^2 & 0 & 0 \\ 0 & 1^2 & 0 \\ 0 & 0 & 1.6^2 \end{bmatrix} \\
+        q_a &= (1.167 \cdot 10^{-3})^2 * 100Hz & q_\omega &= deg2rad((2.5 \cdot 10^{-3})^\circ)^2 * 100Hz  \label{eq:eskf-sim-tuning-noise} \\
+        q_{ab} &= (2.2 \cdot 10^{-3})^2 & q_{\omega b} &= (1.2 \cdot 10^{-5})^2 \label{eq:eskf-sim-tuning-bias} \\
+        p_{ab} &= 10^{-3} & p_{\omega b} &= 10^{-3} \label{eq:eskf-sim-tuning-bias-time}
+\end{tcolorbox}
+
 

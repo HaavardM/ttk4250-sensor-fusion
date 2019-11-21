@@ -1,30 +1,37 @@
 \subsection{Tuning of ESKF for real data} \label{a2task3}
-The next step was to see how the error state Kalman filter would perform on actual real life data. The available dataset contains IMU and GNSS measurements of a unmanned aerial vehicle (UAV) remotely controlled by an operator. The flight path of the UAV as seen from the GNSS measurements is shown in figure \ref{fig:real-track}.
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.6\textwidth]{plots/a2-real-track}
-\caption{UAV Track for the real dataset. Red=GNSS measurements, Blue=ESKF}
-\label{fig:real-track}
-\end{figure}
-With this real dataset, there are some other complications that must be adressed. First is the correction matrices $S_a$ and $S_g$ for the gyro and the accelerometer. These matrices correct for the orientation of the IMU in the body frame of the AUV. They also correct for misaligned axes IMU axes (that is, the IMU may be slightly malproduced with axes that are skewed somewhat off the orthogonal coordinate axes). These matrices however are of course not known exactly, because they are supposed to correct for unknown manufacturing errors, for this reason must expect some inaccuracy in the measurements. The second complication is the leverarm. This is the distance between the center of control on the AUV and the mounting position of the IMU. This value has been measured and is given in the dataset. We give it as an input to the ESKF.
+The next step was to see how the error state Kalman filter would perform on actual real life data. The available dataset contains IMU and GNSS measurements of a unmanned aerial vehicle (UAV) remotely controlled by an operator. The flight path of the UAV as seen from the GNSS measurements is shown in figure \ref{fig:eskf-real-track}.
 
-The tuning of the kalman filter model is again based on the STIM300 datasheet, as this is the actual IMU used on the UAV. We used the same approach as in \cref{sec:using_datasheet} and using the new IMU rate of $250Hz$. We tuned the bias models by hand, heavily inspired by our tuning from the simulated dataset. In this case, we do not have the ground truth available, so we cannot calculate the normalised error state squared (NEES). We are also not able to tune the filter using the error state. We can however use the \textit{innovation} of the kalman filter, which in layman terms is a measure of how much the filter must update or "innovate" the estimate in the update step to correct for the new measurement. In other words we can measure how "off" the prediction is which we further can compare with how certain the filter is when predicting. We also have the GNSS receivers estimated accuracy which we scaled and used as the standard deviation for the GNSS measurements. With our tuning, we are able to achieve a normalized innovation squared (NIS) that stays $81.3\%$ inside the $95\%$ $\chi^2$ confidence interval, shown in figure \ref{fig:nis_basic} below. We also split the NIS into one planar and one altitude component due to the difference in accuracy for GNSS. The CI was also adjusted for commodate the new degrees of freedom for the $\chi^2$. We then used the two NIS metrics when scaling $RGNSS$. We attempted to further tune the IMU noises, but decided it was better to use the official values provided by the manufacturer. Without ground truth and error metrics, it is difficult to further quantify the performance of the filter and therefore difficult to further improve the tuning. 
+The tuning of the kalman filter model is again based on the STIM300 datasheet, as this is the actual IMU used on the UAV. We used the same approach as in \cref{sec:using_datasheet} using the new IMU rate of $\frac{1}{\Delta t} = 250Hz$ with \cref{eq:eskf-cont-noise} to get the continious time acceleration and angular rate noise parameters. We tuned the bias models by hand, heavily inspired by our tuning from the simulated dataset. In this case, we do not have the ground truth available, so we cannot calculate the normalised error state squared (NEES). We are also not able to tune the filter using the error state. We can however use the \textit{innovation} of the kalman filter, which in layman terms is a measure of how much the filter must update or "innovate" the estimate in the update step to correct for the new measurement. In other words we can measure how "off" the prediction is which we further can compare with how certain the filter is when predicting. We also have the GNSS receivers estimated accuracy which we scaled and used as the standard deviation for the GNSS measurements. With our tuning, we are able to achieve a normalized innovation squared (NIS) that stays $81.3\%$ inside the $95\%$ $\chi^2$ confidence interval, shown in figure \ref{fig:eskf-real-nis-basic} below. We also split the NIS into one planar and one altitude component due to the difference in accuracy for GNSS. The CI $\chi^2$ was also adjusted to accommodate for the degrees of freedom in NIS. We then used the two NISes when scaling $RGNSS$. We attempted to further tune the IMU noises, but decided it was better to use the official values provided by the manufacturer. Without ground truth and error metrics, it is difficult to further quantify the performance of the filter and therefore difficult to further improve the tuning. 
+
+\input{a2task3paramvalues.tex}
 
 \begin{figure}[H]
         \centering
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.50\textwidth}
                 \includegraphics[width=\textwidth]{plots/a2-real-nis}
-                \caption{NIS }
-                \label{fig:nis_basic}
+                \caption{ NIS logarithm - logarithm is used to better visualize the spike when the AUV is launched}
+                \label{fig:eskf-real-nis-basic}
         \end{subfigure}%
-~
-        \begin{subfigure}[b]{0.45\textwidth}
+        \hfill
+        \begin{subfigure}[b]{0.50\textwidth}
                 \includegraphics[width=\textwidth]{plots/a2-real-nis-colored-track}
                 \caption{NIS colored track}
-                \label{fig:nis_colored_track}
+                \label{fig:eskf-real-nis-coloredtrack}
         \end{subfigure}
-        \caption{Normalized Innovation Squared for the real dataset}
-        \label{fig:nis}
+        \caption{ESKF NIS for the real dataset}
 \end{figure}
-\input{a2task3paramvalues.tex}
+\begin{figure}
+        \begin{subfigure}[b]{0.49\textwidth}
+                \includegraphics[width=\textwidth]{plots/a2-real-ppred-colored-track}
+                \caption{$P_{pred}$ norm colored track}
+                \label{fig:eskf-real-ppred-coloredtrack}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.49\textwidth}
+                \includegraphics[width=\textwidth]{plots/a2-real-track}
+                \caption{UAV Track for the real dataset. Red=GNSS measurements, Blue=ESKF}
+                \label{fig:eskf-real-track}
+        \end{subfigure}
+        \caption{ESKF results for the real dataset}
+\end{figure}
 
