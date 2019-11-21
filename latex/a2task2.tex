@@ -2,33 +2,39 @@
 We initialized the tuning by looking up typical values for GNASS and IMUs. We tuned $q_a$ and $q_\omega$ according to \cref{sec:using_datasheet}. We tuned the standard deviation for GNASS using \texttt{eskf.NISGNSS} and attempted to get it within the $95\%$ CI. We increased the standard deviation for the altitude component in the GNSS measurement noise since GNSS is usually best at estimating XY position. For the bias models we selected a reciprocal time constant $p_{ab} = p_{\omega b} = 10^{-3}$ after some trial and error. The bias noises were hand tuned to get NEES for bias within the $95\%$ CI. We also looked at the estimation errors and made sure they remained reasonably low. We had extra focus on the attitude error because it propogates into the acceleration in the intertial frame (which causes a lot of errors when integrated twice for position). The error state covariance was initialized to a quite low value to avoid long period of large errors in the beginning until the filter has converged. Initialization is important for ESKF as it can  converge very slow if initialized incorrectly.
 
 \subsubsection{Using parameters from STIM300 datasheet}\label{sec:using_datasheet}
-To tune the ESKF acceleration and angular velocity continious time noise we used the STIM300 datasheet \cite{stim300} and used the values for angular random walk (table 6.3 in \cite{stim300}) and velocity random walk (table 6.4 in \cite{stim300}). 
+To tune the ESKF acceleration and angular velocity continious time noise we used the STIM300 datasheet \cite{stim300}. For discrete noise parameters we used the values for angular random walk (table 6.3 in \cite{stim300}) as $\sigma_{gn}$ and velocity random walk (table 6.4 in \cite{stim300}) as $\sigma_{an}$. 
 The datasheet specifies angle as degrees, so we had to convert the angular random walk to radians.
-The random walk parameters can then be scaled using $h=3600s$ and multiplied by the square root of the IMU rate $\sqrt{\frac{1}{dt}}$ to get the continious time noise parameters $q_a$ and $q_\omega$.
-
-
-\begin{figure}
-    \centering
-    \begin{adjustbox}{minipage=1.1\linewidth, scale=1}
-        \begin{subfigure}{.5\textwidth}
-            \includegraphics[width=\linewidth]{plots/a2-sim-state_error.pdf} 
-            \caption{State error}
-            \label{fig:a2-sim-state_error}
-        \end{subfigure}
-        \begin{subfigure}{.5\textwidth}
-            \includegraphics[width=\linewidth]{plots/a2-sim-nees.pdf} 
-            \caption{NEES}
-            \label{fig:a2-sim-nees}
-        \end{subfigure}
-    \end{adjustbox}
-        \caption{ESKF filter error for simulated data}
-        \label{fig:a2-sim-error_NEES}
-\end{figure}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.7\linewidth]{plots/a2-sim-estimates.pdf} 
-    \caption{State estimates}
-    \label{fig:a2-sim-estimates}
-\end{figure}
+The random walk parameters can then be divided by $\sqrt{3600}$ to get the correct units and multiplied by the square root of the IMU rate $\sqrt{\frac{1}{dt}}$ to get the continious time standard deviations (eq 10.70\cite{edmund}). The continious time noise parameters $q_a$ and $q_\omega$ are trivial to find by squaring the standard deviation.
+\begin{align}
+q_a &= (\frac{\sigma_{an}}{\sqrt{3600}} \sqrt{\frac{1}{\Delta t}})^2 = \frac{\sigma_{an}^2}{3600 \Delta t} & q_g &= (\frac{\sigma_{gn}}{\sqrt{3600}}\sqrt{\frac{1}{\Delta t}})^2 = \frac{\sigma_{gn}^2}{3600 \Delta t} \label{eq:eskf-cont-noise}
+\end{align}
 
 \input{a2task2paramvalues} 
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\linewidth]{plots/a2-sim-state_error.pdf} 
+        \caption{State error}
+        \label{fig:eskf-sim-state-error}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\linewidth]{plots/a2-sim-nees.pdf} 
+        \caption{NEES}
+        \label{fig:eskf-sim-nees}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.50\textwidth}
+        \includegraphics[width=\linewidth]{plots/a2-sim-estimates.pdf} 
+        \caption{State estimates}
+        \label{fig:a2-sim-estimates}
+    \end{subfigure}
+
+    \caption{ESKF results for simulated data}
+    \label{fig:eskf-sim-error-NEES}
+\end{figure}
+
+
+
