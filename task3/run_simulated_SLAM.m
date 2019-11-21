@@ -1,3 +1,7 @@
+%% Clear
+clear all; close all;
+
+%% Load
 load simulatedSLAM;
 K = numel(z);
 %% Come on and slam
@@ -116,20 +120,14 @@ grid on;
 % title(sprintf('transformed: x = %0.2fm, y = %0.2fm , \\theta = %0.2fdeg',deltaXFinal(1:2),deltaXFinal(3)*180/pi))
 %
 
-%% consistency: what to do with variable measurement size..?
-alpha = 0.05;
-ANIS = mean(NIS)
-ACI = chi2inv([alpha/2; 1 - alpha/2], 1)/N % NOT CORRECT NOW
-CI = chi2inv([alpha/2; 1 - alpha/2], 1); % NOT CORRECT NOW
-warning('These consistency intervals have wrong degrees of freedom')
-
+%% consistency
 figure(5); clf;
 hold on;
-plot(1:N, NIS(1:N));
-insideCI = mean((CI(1) < NIS) .* (NIS <= CI(2)))*100;
-plot([1, N], (CI*ones(1, 2))','r--');
-
-title(sprintf('NIS over time, with %0.1f%% inside %0.1f%% CI', insideCI, (1-alpha)*100));
+plot(NIS); hold on;
+line([1, numel(NIS)],[1,1], 'Color', 'red', 'LineStyle', '--')
+line([1, numel(NIS)],[0,0], 'Color', 'red', 'LineStyle', '--')
+insideCI = round(100*mean((0 <= NIS).* (NIS <= 1))); % NIS scaled to be between 0 and 1
+title(sprintf("NIS divided by chi2 upper bound (%0.1f%% percent inside %0.1f%% CI)", insideCI, 95));
 grid on;
 ylabel('NIS');
 xlabel('timestep');
