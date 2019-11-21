@@ -6,7 +6,7 @@ R = 1e-1^2 * eye(2);
 doAsso = true;
 checkValues = true;
 JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
-slam = EKFSLAM(Q, R, doAsso, JCBBalphas, zeros(2, 1), checkValues);
+slam = EKFSLAM2(Q, R, doAsso, JCBBalphas, zeros(2, 1), checkValues);
 
 % allocate
 etapred = cell(1, K); % Cell array of etas
@@ -51,7 +51,7 @@ for k = 1:N
     end
 end
 
-% plotting
+%% plotting
 figure(3);
 k = N;
 clf;

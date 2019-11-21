@@ -1,3 +1,6 @@
+%% Clear
+clear all; close all
+
 %% data loading
 addpath('./victoria_park');
 load('aa3_dr.mat');
@@ -19,35 +22,36 @@ car.H = 0.76; % center to wheel encoder
 car.a = 0.95; % laser distance in front of first axel
 car.b = 0.5; % laser distance to the left of center
 
+doAsso = true;
+doLAdd = true; % Add new landmarks
+doPlot = true;
+
 % the SLAM parameters
 sigmas = [5e-3 , 5e-3 , 2e-2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
-Q = diag(sigmas) * [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1] * diag(sigmas); % (a bit at least) emprically found, feel free to change
+Q = diag(sigmas) * CorrCoeff * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = diag([3e-3, 3e-3]);
+R = diag([1e-2, 1e-2]);
 
-JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
+JCBBalphas = [1e-6, 1e-5]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
-slam = EKFSLAM(Q, R, true, JCBBalphas, sensorOffset);
-
-% allocate
-xupd = zeros(3, mK);
-a = cell(1, mK);
 
 % initialize TWEAK THESE TO BETTER BE ABLE TO COMPARE TO GPS
 init_angle = 37;
 init_offset_x = -1;
 init_offset_y = 0;
-eta = [Lo_m(1) + init_offset_x; La_m(2) + init_offset_y; init_angle * pi /180]; % set the start to be relatable to GPS. 
 P = zeros(3,3); % we say that we start knowing where we are in our own local coordinates
 
-mk = 2; % first seems to be a bit off in timing
-t = timeOdo(1);
-tic
 N = 15000;
 
-
-doPlot = true;
+%% Slam dunk
+% allocate
+eta(1:3) = [Lo_m(1) + init_offset_x; La_m(2) + init_offset_y; init_angle * pi /180]; % set the start to be relatable to GPS. 
+xupd = zeros(3, mK);
+a = cell(1, mK);
+slam = EKFSLAM(Q, R, doAsso, doLAdd, JCBBalphas, sensorOffset);
+mk = 2; % first seems to be a bit off in timing
+t = timeOdo(1);
 figure(1); clf;  hold on; grid on; axis equal;
 ax = gca;
 % cheeper to update plot data than to create new plot objects
@@ -56,8 +60,7 @@ shLmk = scatter(ax, nan, nan, 'rx');
 shZ = scatter(ax, nan, nan, 'bo');
 lhPose = plot(ax, eta(1), eta(2), 'k', 'LineWidth', 2);
 th = title(ax, 'start');
-
-%% Slam dunk
+tic
 for k = 1:N
     if mk < mK && timeLsr(mk) <= timeOdo(k+1)
         dt = timeLsr(mk) - t;
