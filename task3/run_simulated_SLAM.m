@@ -4,9 +4,10 @@ K = numel(z);
 Q = 2e-1^2 * eye(3);
 R = 1e-1^2 * eye(2);
 doAsso = true;
+doLAdd = true; % add landmarks
 checkValues = true;
 JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
-slam = EKFSLAM2(Q, R, doAsso, JCBBalphas, zeros(2, 1), checkValues);
+slam = EKFSLAM(Q, R, doAsso, doLAdd, JCBBalphas, zeros(2, 1), checkValues);
 
 % allocate
 etapred = cell(1, K); % Cell array of etas
