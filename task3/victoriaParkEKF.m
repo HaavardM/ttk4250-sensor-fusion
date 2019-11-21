@@ -60,6 +60,9 @@ shLmk = scatter(ax, nan, nan, 'rx');
 shZ = scatter(ax, nan, nan, 'bo');
 lhPose = plot(ax, eta(1), eta(2), 'k', 'LineWidth', 2);
 th = title(ax, 'start');
+
+% Show covariance image
+figure, handlecovarfig = axes;
 tic
 for k = 1:N
     if mk < mK && timeLsr(mk) <= timeOdo(k+1)
@@ -88,6 +91,7 @@ for k = 1:N
             end
 
             th.String = sprintf('step %d, laser scan %d, landmarks %d, measurements %d, num new = %d', k, mk, (size(eta,1) - 3)/2, size(z,2), nnz(a{k} == 0));
+            image(P/trace(Q), 'Parent', handlecovarfig);
             drawnow;
             pause(0.01)
         end
@@ -122,3 +126,7 @@ title(sprintf("NIS divided by chi2 upper bound (%d percent inside 95-CI)", insid
 
 %% Plot NIS-colored track
 plotcoloredtrack(xupd(1:2, 1:(mk-1)) + 2, NISmk, "NIS colored track", 3, 4);
+
+%% Show covariance matrix
+figure(5);
+image(P/trace(Q));

@@ -3,4 +3,7 @@
 * ekf has a tendency to become overoptimistic
 * lots of the landmarks that are registered are cars!
     * they are constantly moving, thereby breaking the landmark assumptions
+    * we add all unassociated measurements as new landmarks and never remove any again
 
+* It is known that in the limit of SLAM, all x-coordinates and all y-coordinates become fully correlated (Dissanayake et al. 2001). https://jinyongjeong.github.io/images/post/SLAM/lec09_SEIF_SLAM/SEIF.pdf
+* PDAF can be used to better reject clutter measurements
