@@ -314,3 +314,8 @@ boxplot([NEESpos', NEESvel', NEESatt', NEESaccbias', NEESgyrobias', gaussCompare
     'notch', 'on', 'labels',{'NEESpos', 'NEESvel', 'NEESatt', 'NEESaccbias', 'NEESgyrobias', 'gauss(3dim)'});
 grid on;
 printplot(fig, "a2-sim-boxplot.pdf");
+
+if exist('showplt_nis_colored_track') && showplt_nis_colored_track
+    plotcoloredtrack(zGNSS(:, start:GNSSk-1), NIS(start:GNSSk-1), "NIS colored track (xy projection)", 5, 5);
+    printplot(gcf, "a2-sim-nis-colored-track.pdf");
+end

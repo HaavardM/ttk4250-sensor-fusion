@@ -1,3 +1,4 @@
+clear all; close all; clc;
 %% Parameters
 showplt_track = true;
 showplt_estimates = true;
@@ -32,8 +33,9 @@ pGyro = 1e-3; % gyrp bias reciprocal time constant
 
 %% Estimator
 eskf = ESKF(qA, qG, qAb, qGb, pAcc, pGyro);
-eskf.Sa = eye(3)*S_a; % set the accelerometer correction matrix
-eskf.Sg = eye(3)*S_g; % set the gyro correction matrix
+r = [1 0 0; 0 0 -1; 0 1 0];
+eskf.Sa = S_a; % set the accelerometer correction matrix
+eskf.Sg = S_g; % set the gyro correction matrix
 %% Allocate
 xest = zeros(16, K);
 Pest = zeros(15, 15, K);
@@ -46,6 +48,7 @@ xpred(1:3, 1) = [0, 0, 0]'; % starting 5 meters above ground
 %xpred(4:6, 1) = [0.0173; -0.0129; 0.1983]; %
 xpred(7, 1) = cosd(45); % nose to east, right to south and belly down.
 xpred(10, 1) = sind(45);
+%xpred(7:10, 1) = quatProd(euler2quat([pi/2 0 0]), xpred(7:10, 1));
 
 Ppred(1:3, 1:3, 1) = (2e-1)^2*eye(3); % pos
 Ppred(4:6, 4:6, 1) = (3e-4)^2*eye(3); % vel
@@ -149,26 +152,27 @@ CI1 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 1);
 CI2 = chi2inv([alpha/2; 1 - alpha/2; 0.5], 2);
 clf;
 subplot(3,1,1);
-plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(1, :));
+plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), log(NIS(1, :)));
 grid on;
 hold on;
-plot([0, timeIMU(N) - timeIMU(1)], (CI3*ones(1,2))', 'r--');
+plot([0, timeIMU(N) - timeIMU(1)], log((CI3*ones(1,2)))', 'r--');
 insideCI = mean((CI3(1) <= NIS(1, :)).* (NIS(1, :) <= CI3(2)));
-title(sprintf('NIS (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+title(sprintf('log NIS (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+hold on;
 subplot(3,1,2);
-plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(2, :));
+plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), log(NIS(2, :)));
 grid on;
 hold on;
-plot([0, timeIMU(N) - timeIMU(1)], (CI2*ones(1,2))', 'r--');
+plot([0, timeIMU(N) - timeIMU(1)], log((CI2*ones(1,2)))', 'r--');
 insideCI = mean((CI2(1) <= NIS(2, :)).* (NIS(2, :) <= CI2(2)));
-title(sprintf('NIS planar (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+title(sprintf('log NIS planar (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
 subplot(3,1,3);
-plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), NIS(3, :));
+plot(timeGNSS(1:(GNSSk - 1)) - timeIMU(1), log(NIS(3, :)));
 grid on;
 hold on;
-plot([0, timeIMU(N) - timeIMU(1)], (CI1*ones(1,2))', 'r--');
+plot([0, timeIMU(N) - timeIMU(1)], (log(CI1*ones(1,2)))', 'r--');
 insideCI = mean((CI1(1) <= NIS(3, :)).* (NIS(3, :) <= CI1(2)));
-title(sprintf('NIS altitude (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
+title(sprintf('log NIS altitude (%.3g%% inside %.3g%% confidence intervall)', 100*insideCI, 100*(1 - alpha)));
 printplot(fig3, "a2-real-nis.pdf");
 
 if exist('showplt_boxplot') && showplt_boxplot
@@ -198,30 +202,14 @@ states(13) = "gyro bias";
 
 %% Ppred colored track
 if exist('showplt_ppred_colored_track') && showplt_ppred_colored_track
-    plot_no = 0;
-    for state = 1:3:13
-        plot_no = plot_no + 1;
-        k = 1;
-        for i = 1:N
-            if timeIMU(i) > timeGNSS(k)
-                GNSS_Ppred_norm(:, :, k) = norm(Ppred(state:state+2, state:state+2, i));
-                k = k + 1;
-            end
+    k = 1;
+    for i = 1:N
+        if timeIMU(i) > timeGNSS(k)
+            GNSS_Ppred_norm(:, :, k) = norm(Ppred(:, :, i));
+            k = k + 1;
         end
-        start = 1;
-        plotcoloredtrack(zGNSS(:, start:GNSSk-1), GNSS_Ppred_norm(:,start:GNSSk-1), sprintf("%s Ppred colored track", states(state)), 3000, 6 + state);
-        printplot(gcf, sprintf("a2-real-%s-ppred-colored-track.pdf", states(state)));
     end
+    state = 1;
+    plotcoloredtrack(zGNSS(:, start:GNSSk-1), GNSS_Ppred_norm(:,start:GNSSk-1), sprintf("Ppred colored track", states(state)), 3000, 6 + state);
+    printplot(gcf, sprintf("a2-real-ppred-colored-track.pdf", states(state)));
 end
-%% Covariance plot
-if exist('showplt_covariance') && showplt_covariance
-    fig9 = figure(90);
-else
-    fig9 = figure('visible', 'off');
-end
-for state = 1:3:13
-    subplot(5,1,plot_no);
-    plot(GNSS_Ppred_norm(:, start:GNSSk-1));
-    title(sprintf("%s Ppred", states(state)));
-end
-printplot(gcf, "a2-real-covariance.pdf");
