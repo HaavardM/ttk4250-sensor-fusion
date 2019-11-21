@@ -7,3 +7,4 @@
 
 * It is known that in the limit of SLAM, all x-coordinates and all y-coordinates become fully correlated (Dissanayake et al. 2001). https://jinyongjeong.github.io/images/post/SLAM/lec09_SEIF_SLAM/SEIF.pdf
 * PDAF can be used to better reject clutter measurements
+    * IPDA has a concept of target existance, i.e. we can let spurious landmarks "die"

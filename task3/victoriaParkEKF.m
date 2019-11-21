@@ -12,7 +12,7 @@ timeGps = timeGps/1000;
 K = numel(timeOdo);
 mK = numel(timeLsr);
 
-%% View lsr
+%% View laser measurement movie
 viewLsr();
 
 %% Parameters
@@ -24,14 +24,14 @@ car.b = 0.5; % laser distance to the left of center
 
 doAsso = true;
 doLAdd = true; % Add new landmarks
-doPlot = true;
+doPlot = false;
 
 % the SLAM parameters
 sigmas = [5e-3 , 5e-3 , 2e-2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
 Q = diag(sigmas) * CorrCoeff * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = diag([1e-2, 1e-2]);
+R = diag([1e-3, 1e-3]);
 
 JCBBalphas = [1e-6, 1e-5]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
@@ -45,13 +45,17 @@ P = zeros(3,3); % we say that we start knowing where we are in our own local coo
 N = 15000;
 
 %% Slam dunk
-% allocate
+% allocate all the stuff we need
 eta(1:3) = [Lo_m(1) + init_offset_x; La_m(2) + init_offset_y; init_angle * pi /180]; % set the start to be relatable to GPS. 
 xupd = zeros(3, mK);
 a = cell(1, mK);
 slam = EKFSLAM(Q, R, doAsso, doLAdd, JCBBalphas, sensorOffset);
 mk = 2; % first seems to be a bit off in timing
 t = timeOdo(1);
+updatecomptimes = []; % contains computational time of update steps
+updatelandmarkcount = []; % contains number of landmarks after each update
+
+% Live slam plot
 figure(1); clf;  hold on; grid on; axis equal;
 ax = gca;
 % cheeper to update plot data than to create new plot objects
@@ -63,7 +67,6 @@ th = title(ax, 'start');
 
 % Show covariance image
 figure, handlecovarfig = axes;
-tic
 for k = 1:N
     if mk < mK && timeLsr(mk) <= timeOdo(k+1)
         dt = timeLsr(mk) - t;
@@ -75,7 +78,10 @@ for k = 1:N
             error('negative time increment...')
         end
         z = detectTreesI16(LASER(mk,:));
+        tic;
         [eta, P, NIS(k), a{k}] = slam.update(eta, P, z);
+        updatecomptimes = [updatecomptimes; toc];
+        updatelandmarkcount = [updatelandmarkcount; (size(eta, 1) - 3) / 2];
         xupd(:, mk) = eta(1:3); 
         NISmk(mk) = NIS(k);
         mk = mk + 1;
@@ -104,9 +110,7 @@ for k = 1:N
         [eta, P] = slam.predict(eta, P, odo);
     end
     if mod(k, 50) == 0
-        toc
-        disp(k)
-        tic
+        fprintf(1, "Completed %d/%d timesteps\n", k, N);
     end
 end
 
@@ -130,3 +134,14 @@ plotcoloredtrack(xupd(1:2, 1:(mk-1)) + 2, NISmk, "NIS colored track", 3, 4);
 %% Show covariance matrix
 figure(5);
 image(P/trace(Q));
+
+%% Plot landmark count vs update computational time
+figure(6); clf; hold on;
+myfit = fit(updatelandmarkcount,updatecomptimes,'poly2','Robust','on');
+scatter(updatelandmarkcount, updatecomptimes, 'b.');
+legend("Update times");
+fitplt = plot(myfit, 'r--');
+fitplt.LineWidth = 2;
+xlabel("Number of landmarks");
+ylabel("Computation time of update [s]");
+ylim([0, 1]);
