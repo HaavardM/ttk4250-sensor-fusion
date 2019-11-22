@@ -6,21 +6,21 @@ load simulatedSLAM;
 K = numel(z);
 
 %% Meta stuff
-nis_plot_mask = [true, true]; % [show plot, print plot]
-nees_plot_mask = [true, true];
-error_plot_mask = [true, true];
-results_plot_mask = [true, true];
+nis_plot_mask = [true, false]; % [show plot, print plot]
+nees_plot_mask = [true, false];
+error_plot_mask = [true, false];
+results_plot_mask = [true, false];
 
-show_movie = true;
+show_movie = false;
 doAssoPlot = false; % set to true to se the associations that are done
 CI_alpha = 0.05;
 %% Come on and slam
-Q = diag([0.60e-1^2*ones(1, 2), 0.02^2]);
-R = diag([4.5e-2^2, 2.4e-2^2]);
+Q = diag([0.54e-1^2*ones(1, 2), 0.014^2]);
+R = diag([3.2e-2^2, 3.2e-2^2]);
 doAsso = true;
 doLAdd = true; % add landmarks
 checkValues = true;
-JCBBalphas = [0.005, 1e-3]; % first is for joint compatibility, second is individual 
+JCBBalphas = [0.000001, 1e-3]; % first is for joint compatibility, second is individual 
 slam = EKFSLAM(Q, R, doAsso, doLAdd, JCBBalphas, zeros(2, 1), checkValues);
 
 % allocate
