@@ -1,6 +1,18 @@
 %% Clear
 clear all; close all
 
+%% Meta stuff
+nis_plot_mask = [true, true]; % [show plot, print plot]
+results_plot_mask = [true, true];
+results_bg_plot_mask = [true, true];
+results_clustered_plot_mask = [true, true];
+covar_plot_mask = [true, true];
+
+show_and_print_nis_colored_track = false; % must be shown to be printed
+show_lmk_count_update_time_plot = false; % do not automatically print this
+show_lsr_movie = false;
+doPlot = true; % show live slam movie
+
 %% data loading
 addpath('./victoria_park');
 load('aa3_dr.mat');
@@ -13,7 +25,9 @@ K = numel(timeOdo);
 mK = numel(timeLsr);
 
 %% View laser measurement movie
-viewLsr();
+if show_lsr_movie
+    viewLsr();
+end
 
 %% Parameters
 % the car parameters
@@ -24,7 +38,6 @@ car.b = 0.5; % laser distance to the left of center
 
 doAsso = true;
 doLAdd = true; % Add new landmarks
-doPlot = true;
 
 % the SLAM parameters
 sigmas = [4e-2 , 4e-2, 2e-2];
@@ -117,63 +130,114 @@ for k = 1:N
 end
 
 %% Plot results
-figure(2); clf;  hold on; grid on; axis equal;
-plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
-scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
-scatter(eta(4:2:end), eta(5:2:end), 'rx');
-xlim([-150, 150]);
-ylim([-150, 150]);
-
+if results_plot_mask(1)
+    fig = figure(2);
+elseif results_plot_mask(2)
+    fig = figure("visible", "off");
+end
+if any(results_plot_mask)
+    clf;  hold on; grid on; axis equal;
+    plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
+    scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
+    scatter(eta(4:2:end), eta(5:2:end), 'rx');
+    xlim([-150, 150]);
+    ylim([-150, 150]);
+    if results_plot_mask(2)
+        printplot(fig, "a3-real-results.pdf");
+    end
+end
 %% Plot results with background
-figure(19); clf;  hold on; grid on; axis equal;
-scatter(eta(4:2:end), eta(5:2:end), 'y.');
-scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), 'r.')
-plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)), 'b')
-xlim([-150, 150]);
-ylim([-150, 150]);
-I = imread('aerial-wide.png');
-I = imrotate(I, -3, 'bilinear');
-impos_x = [-540 400];
-impos_y = [315 -167];
-implot = image(I, 'XData', impos_x, 'YData', impos_y);
-uistack(implot, 'bottom');
-
+if any(results_bg_plot_mask)
+    if results_bg_plot_mask(1)
+        fig = figure(19);
+    elseif resutls_bg_plot_mask(2)
+        fig = figure("visible", "off");
+    end
+    clf;  hold on; grid on; axis equal;
+    scatter(eta(4:2:end), eta(5:2:end), 'y.');
+    scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), 'r.')
+    plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)), 'b')
+    xlim([-150, 150]);
+    ylim([-150, 150]);
+    I = imread('aerial-wide.png');
+    I = imrotate(I, -3, 'bilinear');
+    impos_x = [-540 400];
+    impos_y = [315 -167];
+    implot = image(I, 'XData', impos_x, 'YData', impos_y);
+    uistack(implot, 'bottom');
+    if results_bg_plot_mask(2)
+        printplot(fig, "a3-real-results-bg.pdf");
+    end
+end
 %% Plot results with clustered landmarks
-figure(42); clf;  hold on; grid on; axis equal;
-plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
-scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
-c1_start = 170;
-c1_end = 306;
-c2_start = 570;
-c2_end = 630;
-scatter(eta(4:2:end), eta(5:2:end), 'k.');
-scatter(eta(c1_start:2:c1_end), eta(c1_start+1:2:c1_end+1), 'g*');
-scatter(eta(c2_start:2:c2_end), eta(c2_start+1:2:c2_end+1), 'r*');
-xlim([-150, 150]);
-ylim([-150, 150]);
-
+if any(results_clustered_plot_mask)
+    if results_clustered_plot_mask(1)
+        fig = figure(42);
+    elseif results_clustered_plot_mask(2)
+        fig = figure("visible", "off");
+    end
+    clf;  hold on; grid on; axis equal;
+    plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
+    scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
+    c1_start = 170;
+    c1_end = 306;
+    c2_start = 570;
+    c2_end = 630;
+    scatter(eta(4:2:end), eta(5:2:end), 'k.');
+    scatter(eta(c1_start:2:c1_end), eta(c1_start+1:2:c1_end+1), 'g*');
+    scatter(eta(c2_start:2:c2_end), eta(c2_start+1:2:c2_end+1), 'r*');
+    xlim([-150, 150]);
+    ylim([-150, 150]);
+    if results_clustered_plot_mask(2)
+        printplot(fig, "a3-real-results-clustered.pdf");
+    end
+end
 %% Plot NIS
-figure(3); clf;
-plot(NISmk); hold on;
-line([1, numel(NISmk)],[1,1], 'Color', 'red', 'LineStyle', '--')
-line([1, numel(NISmk)],[0,0], 'Color', 'red', 'LineStyle', '--')
-insideCI = round(100*mean((0 <= NISmk).* (NISmk <= 1))); % NIS scaled to be between 0 and 1
-title(sprintf("NIS divided by chi2 upper bound (%d percent inside 95-CI)", insideCI));
+if any(nis_plot_mask)
+    if nis_plot_mask(1)
+        fig = figure(3);
+    elseif nis_plot_mask(2)
+        fig = figure("visible", "off");
+    end
+    clf;
+    plot(NISmk); hold on;
+    line([1, numel(NISmk)],[1,1], 'Color', 'red', 'LineStyle', '--')
+    line([1, numel(NISmk)],[0,0], 'Color', 'red', 'LineStyle', '--')
+    insideCI = round(100*mean((0 <= NISmk).* (NISmk <= 1))); % NIS scaled to be between 0 and 1
+    title(sprintf("NIS divided by chi2 upper bound (%d percent inside 95-CI)", insideCI));
+    if nis_plot_mask(2)
+        printplot(fig, "a3-real-nis.pdf");
+    end
+end
 
 %% Plot NIS-colored track
-plotcoloredtrack(xupd(1:2, 1:(mk-1)) + 2, NISmk, "NIS colored track", 3, 4);
+if show_and_print_nis_colored_track
+    plotcoloredtrack(xupd(1:2, 1:(mk-1)) + 2, NISmk, "NIS colored track", 3, 4);
+    printplot(gcf, "a3-nis-colored-track.pdf");
+end
 
 %% Show covariance matrix
-figure(5);
-image(P/trace(Q));
+if any(covar_plot_mask)
+    if covar_plot_mask(1)
+        fig = figure(5);
+    elseif covar_plot_mask(2)
+        fig = figure("visible", "off");
+    end
+    image(P/trace(Q));
+    if covar_plot_mask(2)
+        printplot(fig, "a3-real-covar-matrix.pdf");
+    end
+end
 
 %% Plot landmark count vs update computational time
-figure(6); clf; hold on;
-myfit = fit(updatelandmarkcount,updatecomptimes,'poly2','Robust','on');
-scatter(updatelandmarkcount, updatecomptimes, 'b.');
-legend("Update times");
-fitplt = plot(myfit, 'r--');
-fitplt.LineWidth = 2;
-xlabel("Number of landmarks");
-ylabel("Computation time of update [s]");
-ylim([0, 1]);
+if show_lmk_count_update_time_plot
+    figure(6); clf; hold on;
+    myfit = fit(updatelandmarkcount,updatecomptimes,'poly2','Robust','on');
+    scatter(updatelandmarkcount, updatecomptimes, 'b.');
+    legend("Update times");
+    fitplt = plot(myfit, 'r--');
+    fitplt.LineWidth = 2;
+    xlabel("Number of landmarks");
+    ylabel("Computation time of update [s]");
+    ylim([0, 1]);
+end
