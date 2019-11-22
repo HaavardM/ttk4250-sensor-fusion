@@ -8,18 +8,19 @@ K = numel(z);
 %% Meta stuff
 nis_plot_mask = [true, true]; % [show plot, print plot]
 nees_plot_mask = [true, true];
+error_plot_mask = [true, true];
 results_plot_mask = [true, true];
 
-show_movie = false;
+show_movie = true;
 doAssoPlot = false; % set to true to se the associations that are done
 CI_alpha = 0.05;
 %% Come on and slam
-Q = 1.5e-2^2 * eye(3);
-R = diag([6e-2^2, 4e-2^2]);
+Q = diag([0.60e-1^2*ones(1, 2), 0.02^2]);
+R = diag([4.5e-2^2, 2.4e-2^2]);
 doAsso = true;
 doLAdd = true; % add landmarks
 checkValues = true;
-JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
+JCBBalphas = [0.005, 1e-3]; % first is for joint compatibility, second is individual 
 slam = EKFSLAM(Q, R, doAsso, doLAdd, JCBBalphas, zeros(2, 1), checkValues);
 
 % allocate
@@ -32,6 +33,7 @@ a = cell(1, K);
 % init
 etapred{1} = poseGT(:,1); % we start at the correct position for reference
 Ppred{1} = zeros(3, 3); % we also say that we are 100% sure about that
+pos_err = zeros(3, K);
 
 %% Welcome to the jam
 if doAssoPlot
@@ -46,6 +48,7 @@ for k = 1:N
     end
     [etahat{k}, Phat{k}, NIS(k), a{k}] =  slam.update(etapred{k}, Ppred{k}, z{k});
     delta_eta = etahat{k}(1:3) - poseGT(:, k);
+    pos_err(:, k) = delta_eta;
     CI = chi2inv([CI_alpha/2; 1 - CI_alpha/2; 0.5], numel(a{k}));
     NEES(k) = (delta_eta' * (Ppred{k}(1:3, 1:3) \ delta_eta) - CI(1))/(CI(2) - CI(1)); % Normalized NEES according to CI
     if k < K
@@ -184,6 +187,28 @@ if any(nees_plot_mask)
         printplot(fig, "a3-sim-nees.pdf");
     end
 end
+
+    
+
+if error_plot_mask(1)
+    fig = figure(7);
+else 
+    fig = figure('Visible', 'off');
+end
+
+if any(error_plot_mask)
+   subplot(2,1,1);
+   plot(pos_err(1:2, :)');
+   legend('x', 'y');
+   ylabel('error [m]');
+   subplot(2, 1, 2);
+   plot(rad2deg(pos_err(3, :))');
+   legend('\psi');
+   ylabel('error [\circ]');
+   
+   printplot(fig, 'a3-sim-error.pdf');
+end
+
 %% run a movie
 if show_movie
     pauseTime = 0.05;
