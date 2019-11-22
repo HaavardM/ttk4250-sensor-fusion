@@ -55,18 +55,20 @@ t = timeOdo(1);
 updatecomptimes = []; % contains computational time of update steps
 updatelandmarkcount = []; % contains number of landmarks after each update
 
-% Live slam plot
-figure(1); clf;  hold on; grid on; axis equal;
-ax = gca;
-% cheeper to update plot data than to create new plot objects
-scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
-shLmk = scatter(ax, nan, nan, 'rx');
-shZ = scatter(ax, nan, nan, 'bo');
-lhPose = plot(ax, eta(1), eta(2), 'k', 'LineWidth', 2);
-th = title(ax, 'start');
+if doPlot
+    % Live slam plot
+    figure(1); clf;  hold on; grid on; axis equal;
+    ax = gca;
+    % cheeper to update plot data than to create new plot objects
+    scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
+    shLmk = scatter(ax, nan, nan, 'rx');
+    shZ = scatter(ax, nan, nan, 'bo');
+    lhPose = plot(ax, eta(1), eta(2), 'k', 'LineWidth', 2);
+    th = title(ax, 'start');
 
-% Show covariance image
-figure, handlecovarfig = axes;
+    % Show covariance image
+    figure, handlecovarfig = axes;
+end
 for k = 1:N
     if mk < mK && timeLsr(mk) <= timeOdo(k+1)
         dt = timeLsr(mk) - t;
@@ -119,6 +121,22 @@ figure(2); clf;  hold on; grid on; axis equal;
 plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
 scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
 scatter(eta(4:2:end), eta(5:2:end), 'rx');
+xlim([-150, 150]);
+ylim([-150, 150]);
+
+%% Plot results with background
+figure(19); clf;  hold on; grid on; axis equal;
+scatter(eta(4:2:end), eta(5:2:end), 'y.');
+scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), 'r.')
+plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)), 'b')
+xlim([-150, 150]);
+ylim([-150, 150]);
+I = imread('aerial-wide.png');
+I = imrotate(I, -3, 'bilinear');
+impos_x = [-540 400];
+impos_y = [315 -167];
+implot = image(I, 'XData', impos_x, 'YData', impos_y);
+uistack(implot, 'bottom');
 
 %% Plot NIS
 figure(3); clf;
