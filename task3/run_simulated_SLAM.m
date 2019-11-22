@@ -77,7 +77,6 @@ else
     fig = figure("visible", "off");
 end
 if any(results_plot_mask)
-    figure(3);
     k = N;
     clf;
     %subplot(1,2,1);

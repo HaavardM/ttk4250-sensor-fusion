@@ -83,8 +83,7 @@ classdef EKFSLAM
                  
             % (11.19 b)
             Fx = obj.Fx(x, zOdo);
-            Fu = obj.Fu(x, zOdo); % Unused, why?
-            P(1:3, 1:3) = Fx*P(1:3, 1:3)*Fx' + obj.Q; % Maybe add Fu*Q*Fu' instead??
+            P(1:3, 1:3) = Fx*P(1:3, 1:3)*Fx' + obj.Q;
             P(1:3, 4:end) = Fx*P(1:3, 4:end);
             P(4:end, 1:3) = P(4:end, 1:3)*Fx';
             
