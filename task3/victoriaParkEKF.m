@@ -24,16 +24,16 @@ car.b = 0.5; % laser distance to the left of center
 
 doAsso = true;
 doLAdd = true; % Add new landmarks
-doPlot = false;
+doPlot = true;
 
 % the SLAM parameters
-sigmas = [5e-3 , 5e-3 , 2e-2];
+sigmas = [4e-2 , 4e-2, 2e-2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
 Q = diag(sigmas) * CorrCoeff * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = diag([1e-3, 1e-3]);
+R = diag([1e-2, 1e-2]);
 
-JCBBalphas = [1e-6, 1e-5]; % first is for joint compatibility, second is individual 
+JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
 
 % initialize TWEAK THESE TO BETTER BE ABLE TO COMPARE TO GPS
@@ -137,6 +137,20 @@ impos_x = [-540 400];
 impos_y = [315 -167];
 implot = image(I, 'XData', impos_x, 'YData', impos_y);
 uistack(implot, 'bottom');
+
+%% Plot results with clustered landmarks
+figure(42); clf;  hold on; grid on; axis equal;
+plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
+scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
+c1_start = 170;
+c1_end = 306;
+c2_start = 570;
+c2_end = 630;
+scatter(eta(4:2:end), eta(5:2:end), 'k.');
+scatter(eta(c1_start:2:c1_end), eta(c1_start+1:2:c1_end+1), 'g*');
+scatter(eta(c2_start:2:c2_end), eta(c2_start+1:2:c2_end+1), 'r*');
+xlim([-150, 150]);
+ylim([-150, 150]);
 
 %% Plot NIS
 figure(3); clf;
