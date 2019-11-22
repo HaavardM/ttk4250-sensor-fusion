@@ -74,10 +74,18 @@ if doPlot
     ax = gca;
     % cheeper to update plot data than to create new plot objects
     scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
-    shLmk = scatter(ax, nan, nan, 'rx');
+    shLmk = scatter(ax, nan, nan, 'yx');
     shZ = scatter(ax, nan, nan, 'bo');
-    lhPose = plot(ax, eta(1), eta(2), 'k', 'LineWidth', 2);
+    lhPose = plot(ax, eta(1), eta(2), 'r', 'LineWidth', 3);
     th = title(ax, 'start');
+    xlim([-150, 150]);
+    ylim([-150, 150]);
+    I = imread('aerial-wide.png');
+    I = imrotate(I, -3, 'bilinear');
+    impos_x = [-540 400];
+    impos_y = [315 -167];
+    implot = image(I, 'XData', impos_x, 'YData', impos_y);
+    uistack(implot, 'bottom');
 
     % Show covariance image
     figure, handlecovarfig = axes;
