@@ -1,5 +1,6 @@
 * computation time of ekfslam increases with number of landmarks
 * jcbb takes a long time
+    * Slight map misalignment can slow it down to a halt
 * ekf has a tendency to become overoptimistic
 * lots of the landmarks that are registered are cars!
     * they are constantly moving, thereby breaking the landmark assumptions
