@@ -145,7 +145,7 @@ elseif results_plot_mask(2)
 end
 if any(results_plot_mask)
     clf;  hold on; grid on; axis equal;
-    plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
+    plot(xupd(1, 2:(mk-1)), xupd(2, 2:(mk-1)))
     scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
     scatter(eta(4:2:end), eta(5:2:end), 'rx');
     xlim([-150, 150]);
@@ -164,7 +164,8 @@ if any(results_bg_plot_mask)
     clf;  hold on; grid on; axis equal;
     scatter(eta(4:2:end), eta(5:2:end), 'y.');
     scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), 'r.')
-    plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)), 'b')
+    plot(xupd(1, 2:(mk-1)), xupd(2, 2:(mk-1)), 'b')
+    legend("Landmarks", "GNSS", "SLAM track", 'Location', 'southeast');
     xlim([-150, 150]);
     ylim([-150, 150]);
     I = imread('aerial-wide.png');
@@ -185,7 +186,7 @@ if any(results_clustered_plot_mask)
         fig = figure("visible", "off");
     end
     clf;  hold on; grid on; axis equal;
-    plot(xupd(1, 1:(mk-1)), xupd(2, 1:(mk-1)))
+    plot(xupd(1, 2:(mk-1)), xupd(2, 2:(mk-1)))
     scatter(Lo_m(timeGps < timeOdo(N)), La_m(timeGps < timeOdo(N)), '.')
     c1_start = 170;
     c1_end = 306;
