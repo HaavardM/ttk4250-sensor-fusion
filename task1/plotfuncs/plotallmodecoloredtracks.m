@@ -1,4 +1,4 @@
-function plotallmodecoloredtracks(xest, probhat, fignum)
+function plotallmodecoloredtracks(xest, probhat, fignum, labels)
     % Creates one plot containing subplots for all modes
     % xest      estimated states (dim(state) x K)
     % probhat   estimated mode probs (M x K)
@@ -12,6 +12,6 @@ function plotallmodecoloredtracks(xest, probhat, fignum)
         surface([xest(1, :);xest(1, :)],[xest(2, :);xest(2, :)],[z;z],[col;col],'facecol','no','edgecol','interp','linew',2);
         hold on; grid on;
         axis('equal')
-        title(sprintf('Mode colored track s=%d', s));
+        title(sprintf('Mode %s', labels(s)));
     end
 end

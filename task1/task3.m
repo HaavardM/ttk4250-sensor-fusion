@@ -5,8 +5,8 @@ addpath('./plotfuncs');
 %% Parameters
 fignum = 1;
 
-r = 150;
-lambda = 5e-5;
+r = 400;
+lambda = 5e-6;
 PD = 0.85;
 gateSize = 5^2;
 
@@ -140,7 +140,7 @@ figure(fignum); clf; hold on; grid on;
 fignum = fignum + 1;
 plot(xest(1,:), xest(2,:));
 plot(Xgt(1,:), Xgt(2, :));
-scatter(Zmat(1,:), Zmat(2,:))
+%scatter(Zmat(1,:), Zmat(2,:))
 axis('equal')
 title(sprintf('posRMSE = %.3f, velRMSE = %.3f, peakPosDev = %.3f, peakVelDev = %.3f',posRMSE, velRMSE, peakPosDeviation, peakVelDeviation))
 print -depsc plots/task3/a1_task3_tracked_path
@@ -209,6 +209,6 @@ plot([1,K], repmat(ciNEES',[1,2])','r--')
 text(K*1.04, -5, sprintf('%.2f%% inside CI', inCI),'Rotation',90);
 print -depsc plots/task3/a1_task3_NEES
 
-plotallmodecoloredtracks(xest, probhat, fignum);
+plotallmodecoloredtracks(xest, probhat, fignum, ["CV" "CT" "CV_{high}"]);
 print -depsc plots/task3/a1_task3_mode_colored_track
 fignum = fignum + 1;
