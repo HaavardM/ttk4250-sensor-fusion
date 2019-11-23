@@ -1,12 +1,27 @@
+%% Clear
+clear all; close all;
+
+%% Load
 load simulatedSLAM;
 K = numel(z);
+
+%% Meta stuff
+nis_plot_mask = [true, false]; % [show plot, print plot]
+nees_plot_mask = [true, false];
+error_plot_mask = [true, false];
+results_plot_mask = [true, false];
+
+show_movie = false;
+doAssoPlot = false; % set to true to se the associations that are done
+CI_alpha = 0.05;
 %% Come on and slam
-Q = 2e-1^2 * eye(3);
-R = 1e-1^2 * eye(2);
+Q = diag([0.54e-1^2*ones(1, 2), 0.014^2]);
+R = diag([3.2e-2^2, 3.2e-2^2]);
 doAsso = true;
+doLAdd = true; % add landmarks
 checkValues = true;
-JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
-slam = EKFSLAM(Q, R, doAsso, JCBBalphas, zeros(2, 1), checkValues);
+JCBBalphas = [0.000001, 1e-3]; % first is for joint compatibility, second is individual 
+slam = EKFSLAM(Q, R, doAsso, doLAdd, JCBBalphas, zeros(2, 1), checkValues);
 
 % allocate
 etapred = cell(1, K); % Cell array of etas
@@ -18,21 +33,27 @@ a = cell(1, K);
 % init
 etapred{1} = poseGT(:,1); % we start at the correct position for reference
 Ppred{1} = zeros(3, 3); % we also say that we are 100% sure about that
+pos_err = zeros(3, K);
 
 %% Welcome to the jam
-figure(10); clf;
-axAsso = gca;
+if doAssoPlot
+    figure(10); clf;
+    axAsso = gca;
+end
+
 N = K;
-doAssoPlot = true; % set to true to se the associations that are done
 for k = 1:N
     if ~ mod(k, 10)
         fprintf(1, "Completed %d/%d timesteps\n", k, K);
     end
     [etahat{k}, Phat{k}, NIS(k), a{k}] =  slam.update(etapred{k}, Ppred{k}, z{k});
+    delta_eta = etahat{k}(1:3) - poseGT(:, k);
+    pos_err(:, k) = delta_eta;
+    CI = chi2inv([CI_alpha/2; 1 - CI_alpha/2; 0.5], numel(a{k}));
+    NEES(k) = (delta_eta' * (Ppred{k}(1:3, 1:3) \ delta_eta) - CI(1))/(CI(2) - CI(1)); % Normalized NEES according to CI
     if k < K
         [etapred{k + 1}, Ppred{k + 1}] = slam.predict(etahat{k}, Phat{k}, odometry(:, k));
     end
-    
     
     % checks
     if size(etahat{k},1) ~= size(Phat{k},1)
@@ -48,36 +69,45 @@ for k = 1:N
         
         legend(axAsso, 'z', 'zbar', 'a')
         title(axAsso, sprintf('k = %d: %s', k, sprintf('%d, ',a{k})));
+        drawnow;
     end
 end
 
-% plotting
-figure(3);
-k = N;
-clf;
-%subplot(1,2,1);
-hold on;
-
-scatter(landmarks(1,:), landmarks(2,:), 'r^')
-scatter(etahat{k}(4:2:end), etahat{k}(5:2:end), 'b.')
-
-lh1 = plot(poseGT(1, 1:k), poseGT(2,1:k), 'r', 'DisplayName', 'gt');
-lh2 = plot(cellfun(@(x) x(1), etahat), cellfun(@(x) x(2), etahat), 'b', 'DisplayName', 'est');
-
-el = ellipse(etahat{k}(1:2),Phat{k}(1:2,1:2),5,200);
-plot(el(1,:),el(2,:),'b');
-
-for ii=1:((size(Phat{k}, 1)-3)/2)
-   rI = squeeze(Phat{k}(3+[1,2]+(ii-1)*2,3+[1,2]+(ii-1)*2));
-   el = ellipse(etahat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
-   plot(el(1,:),el(2,:),'b');
+%% plotting
+if results_plot_mask(1)
+    fig = figure(3);
+else
+    fig = figure("visible", "off");
 end
+if any(results_plot_mask)
+    k = N;
+    clf;
+    %subplot(1,2,1);
+    hold on;
 
-axis equal;
-title('results')
-legend([lh1, lh2])
-grid on;
+    scatter(landmarks(1,:), landmarks(2,:), 'r^')
+    scatter(etahat{k}(4:2:end), etahat{k}(5:2:end), 'b.')
 
+    lh1 = plot(poseGT(1, 1:k), poseGT(2,1:k), 'r', 'DisplayName', 'gt');
+    lh2 = plot(cellfun(@(x) x(1), etahat), cellfun(@(x) x(2), etahat), 'b', 'DisplayName', 'est');
+
+    el = ellipse(etahat{k}(1:2),Phat{k}(1:2,1:2),5,200);
+    plot(el(1,:),el(2,:),'b');
+
+    for ii=1:((size(Phat{k}, 1)-3)/2)
+       rI = squeeze(Phat{k}(3+[1,2]+(ii-1)*2,3+[1,2]+(ii-1)*2));
+       el = ellipse(etahat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
+       plot(el(1,:),el(2,:),'b');
+    end
+
+    axis equal;
+    title('results')
+    legend([lh1, lh2])
+    grid on;
+    if results_plot_mask(2)
+        printplot(fig, "a3-sim-results.pdf");
+    end
+end
 % subplot(1,2,2);
 % hold on;
 % % funF = @(delta) sum([poseGT(1:2,k) - rotmat2d(delta(3)) * xhat(1:2,k) - delta(1:2), landmarks - rotmat2d(delta(3)) * reshape(xhat(4:end,k),2,[]) - delta(1:2)].^2 ,[1,2]);
@@ -115,48 +145,95 @@ grid on;
 % title(sprintf('transformed: x = %0.2fm, y = %0.2fm , \\theta = %0.2fdeg',deltaXFinal(1:2),deltaXFinal(3)*180/pi))
 %
 
-%% consistency: what to do with variable measurement size..?
-alpha = 0.05;
-ANIS = mean(NIS)
-ACI = chi2inv([alpha/2; 1 - alpha/2], 1)/N % NOT CORRECT NOW
-CI = chi2inv([alpha/2; 1 - alpha/2], 1); % NOT CORRECT NOW
-warning('These consistency intervals have wrong degrees of freedom')
+%% consistency
+if nis_plot_mask(1)
+    fig = figure(5);
+else
+    fig = figure("visible", "off");
+end
+if any(nis_plot_mask)
+    clf;
+    hold on;
+    plot(NIS); hold on;
+    line([1, numel(NIS)],[1,1], 'Color', 'red', 'LineStyle', '--')
+    line([1, numel(NIS)],[0,0], 'Color', 'red', 'LineStyle', '--')
+    insideCI = round(100*mean((0 <= NIS).* (NIS <= 1))); % NIS scaled to be between 0 and 1
+    title(sprintf("NIS divided by chi2 upper bound (%0.1f%% percent inside %0.1f%% CI)", insideCI, (1 - CI_alpha)*100));
+    grid on;
+    ylabel('NIS');
+    xlabel('timestep');
+    if nis_plot_mask(2)
+        printplot(fig, "a3-sim-nis.pdf");
+    end
+end
 
-figure(5); clf;
-hold on;
-plot(1:N, NIS(1:N));
-insideCI = mean((CI(1) < NIS) .* (NIS <= CI(2)))*100;
-plot([1, N], (CI*ones(1, 2))','r--');
+if nees_plot_mask(1)
+    fig = figure(6);
+else
+    fig = figure("visible", "off");
+end
+if any(nees_plot_mask)
+    clf;
+    hold on;
+    plot(NEES); hold on;
+    line([1, numel(NEES)],[1,1], 'Color', 'red', 'LineStyle', '--')
+    line([1, numel(NEES)],[0,0], 'Color', 'red', 'LineStyle', '--')
+    insideCI = round(100*mean((0 <= NEES).* (NEES <= 1))); % NIS scaled to be between 0 and 1
+    title(sprintf("NEES divided by chi2 upper bound (%0.1f%% percent inside %0.1f%% CI)", insideCI, 95));
+    grid on;
+    ylabel('NEES');
+    xlabel('timestep');
+    if nees_plot_mask(2)
+        printplot(fig, "a3-sim-nees.pdf");
+    end
+end
 
-title(sprintf('NIS over time, with %0.1f%% inside %0.1f%% CI', insideCI, (1-alpha)*100));
-grid on;
-ylabel('NIS');
-xlabel('timestep');
+    
+
+if error_plot_mask(1)
+    fig = figure(7);
+else 
+    fig = figure('Visible', 'off');
+end
+
+if any(error_plot_mask)
+   subplot(2,1,1);
+   plot(pos_err(1:2, :)');
+   legend('x', 'y');
+   ylabel('error [m]');
+   subplot(2, 1, 2);
+   plot(rad2deg(pos_err(3, :))');
+   legend('\psi');
+   ylabel('error [\circ]');
+   
+   printplot(fig, 'a3-sim-error.pdf');
+end
 
 %% run a movie
-pauseTime = 0.05;
-fig = figure(4);
-ax = gca;
-for k = 1:N
-    cla(ax); hold on;
-    scatter(ax, landmarks(1,:), landmarks(2,:), 'r^')
-    scatter(ax, etahat{k}(4:2:end), etahat{k}(5:2:end), 'b*')
-    plot(ax, poseGT(1, 1:k), poseGT(2,1:k), 'r-o','markerindices',10:10:k);
-    plot(ax, cellfun(@(x) x(1), etahat(1:k)), cellfun(@(x) x(2), etahat(1:k)), 'b-o','markerindices',10:10:k);
-    
-    if k > 1 % singular cov at k = 1
-        el = ellipse(etahat{k}(1:2),Phat{k}(1:2,1:2),5,200);
-        plot(ax,el(1,:),el(2,:),'b');
+if show_movie
+    pauseTime = 0.05;
+    fig = figure(4);
+    ax = gca;
+    for k = 1:N
+        cla(ax); hold on;
+        scatter(ax, landmarks(1,:), landmarks(2,:), 'r^')
+        scatter(ax, etahat{k}(4:2:end), etahat{k}(5:2:end), 'b*')
+        plot(ax, poseGT(1, 1:k), poseGT(2,1:k), 'r-o','markerindices',10:10:k);
+        plot(ax, cellfun(@(x) x(1), etahat(1:k)), cellfun(@(x) x(2), etahat(1:k)), 'b-o','markerindices',10:10:k);
+
+        if k > 1 % singular cov at k = 1
+            el = ellipse(etahat{k}(1:2),Phat{k}(1:2,1:2),5,200);
+            plot(ax,el(1,:),el(2,:),'b');
+        end
+
+        for ii=1:((size(Phat{k}, 1)-3)/2)
+           rI = squeeze(Phat{k}(3+[1,2]+(ii-1)*2,3+[1,2]+(ii-1)*2)); 
+           el = ellipse(etahat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
+           plot(ax, el(1,:),el(2,:),'b');
+        end
+
+        title(ax, sprintf('k = %d',k))
+        grid(ax, 'on');
+        pause(pauseTime);
     end
-    
-    for ii=1:((size(Phat{k}, 1)-3)/2)
-       rI = squeeze(Phat{k}(3+[1,2]+(ii-1)*2,3+[1,2]+(ii-1)*2)); 
-       el = ellipse(etahat{k}(3 + (1:2) + (ii-1)*2),rI,5,200);
-       plot(ax, el(1,:),el(2,:),'b');
-    end
-    
-    title(ax, sprintf('k = %d',k))
-    grid(ax, 'on');
-    pause(pauseTime);
 end
-        

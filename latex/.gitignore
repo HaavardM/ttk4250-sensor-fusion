@@ -3,3 +3,8 @@ ov.pdf
 *.log
 build/
 
+*.bbl
+*.bcf
+*.blg
+*.dvi
+*.run.xml

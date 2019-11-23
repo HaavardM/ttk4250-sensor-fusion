@@ -3,12 +3,13 @@ classdef EKFSLAM
         Q
         R
         doAsso
+        doLAdd
         alpha
         sensOffset
         checkValues
     end
     methods
-        function obj = EKFSLAM(Q, R, doAsso, alphas, sensorOffset, checkValues)
+        function obj = EKFSLAM(Q, R, doAsso, doLAdd, alphas, sensorOffset, checkValues)
             obj.Q = Q;
             obj.R = R;
             
@@ -18,15 +19,20 @@ classdef EKFSLAM
             obj.doAsso = doAsso;
             
             if nargin < 4
+                doLAdd = true;
+            end
+            obj.doLAdd = doLAdd;
+            
+            if nargin < 5
                 alphas = [0.001, 0.0001];
             end
             obj.alpha = alphas;
             
-            if nargin < 5
+            if nargin < 6
                 sensorOffset = zeros(2,1);
             end
             
-            if nargin < 6
+            if nargin < 7
                 checkValues = false; 
             end
             obj.checkValues = checkValues; 
@@ -77,8 +83,7 @@ classdef EKFSLAM
                  
             % (11.19 b)
             Fx = obj.Fx(x, zOdo);
-            Fu = obj.Fu(x, zOdo); % Unused, why?
-            P(1:3, 1:3) = Fx*P(1:3, 1:3)*Fx' + obj.Q; % Maybe add Fu*Q*Fu' instead??
+            P(1:3, 1:3) = Fx*P(1:3, 1:3)*Fx' + obj.Q;
             P(1:3, 4:end) = Fx*P(1:3, 4:end);
             P(4:end, 1:3) = P(4:end, 1:3)*Fx';
             
@@ -106,7 +111,7 @@ classdef EKFSLAM
             zpred = [sqrt(sum(z_b.^2, 1)); atan2(z_b(2, :), z_b(1, :))];
             
             % make column again
-            zpred = zpred(:); 
+            zpred = zpred(:);
         end
         
         function H = H(obj, eta)
@@ -199,7 +204,7 @@ classdef EKFSLAM
                 zinds(2:2:end) = zinds(1:2:end);
                 z = z(zinds);
 
-                % extract and rearange predicted measurements and cov
+                % extract and rearrange predicted measurements and cov
                 zbarinds = reshape([2*a(a>0) - 1, 2*a(a>0)]', [], 1);
                 zpred = zpred(zbarinds);
                 S = S(zbarinds, zbarinds);
@@ -227,7 +232,9 @@ classdef EKFSLAM
                 % Kalman update
                 W = P*H' / S; 
                 etaupd = eta + W*v; 
-                NIS = v' / S*v; 
+                CI_alpha = 0.05;
+                CI = chi2inv([CI_alpha/2; 1 - CI_alpha/2; 0.5], numel(v));
+                NIS = (v' * (S \ v) - CI(1))/(CI(2) - CI(1)); % Normalize NIS by upper CI bound
                 Pupd = (eye(size(P)) - W*H)*P; 
                 
                 % sanity check, remove for speed
@@ -245,7 +252,7 @@ classdef EKFSLAM
             end
             
             % create new landmarks if any is available
-            if obj.doAsso
+            if obj.doLAdd
                 isNewLmk = (a == 0);
                 if any(isNewLmk)
                     % extract unassociated measurements
