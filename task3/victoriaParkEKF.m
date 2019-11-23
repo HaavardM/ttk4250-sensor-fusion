@@ -7,6 +7,7 @@ results_plot_mask = [true, true];
 results_bg_plot_mask = [true, true];
 results_clustered_plot_mask = [true, true];
 covar_plot_mask = [true, true];
+gnss_diff_plot_mask = [true, true];
 
 show_and_print_nis_colored_track = false; % must be shown to be printed
 show_lmk_count_update_time_plot = false; % do not automatically print this
@@ -64,9 +65,11 @@ xupd = zeros(3, mK);
 a = cell(1, mK);
 slam = EKFSLAM(Q, R, doAsso, doLAdd, JCBBalphas, sensorOffset);
 mk = 2; % first seems to be a bit off in timing
+mk2 = 2; % kek
 t = timeOdo(1);
 updatecomptimes = []; % contains computational time of update steps
 updatelandmarkcount = []; % contains number of landmarks after each update
+gnss_err = [];
 
 if doPlot
     % Live slam plot
@@ -105,7 +108,11 @@ for k = 1:N
         [eta, P, NIS(k), a{k}] = slam.update(eta, P, z);
         updatecomptimes = [updatecomptimes; toc];
         updatelandmarkcount = [updatelandmarkcount; (size(eta, 1) - 3) / 2];
-        xupd(:, mk) = eta(1:3); 
+        xupd(:, mk) = eta(1:3);
+        if timeGps(mk2) <= t
+            gnss_err(mk2) = norm([Lo_m(mk2) - xupd(1, mk); La_m(mk2) - xupd(2, mk)]);
+            mk2 = mk2 + 1;
+        end
         NISmk(mk) = NIS(k);
         mk = mk + 1;
         if doPlot
@@ -235,6 +242,20 @@ if any(covar_plot_mask)
     image(P/trace(Q));
     if covar_plot_mask(2)
         printplot(fig, "a3-real-covar-matrix.pdf");
+    end
+end
+
+%% Plot deviation from GNSS
+if any(gnss_diff_plot_mask)
+    if gnss_diff_plot_mask(1)
+        fig = figure(74);
+    elseif gnss_diff_plot_mask(2)
+        fig = figure("visible", "off");
+    end
+    clf;
+    scatter(timeGps(timeGps < timeOdo(N)), gnss_err, '.');
+    if gnss_diff_plot_mask(2)
+        printplot(fig, "a3-real-gnss-diff.pdf");
     end
 end
 
