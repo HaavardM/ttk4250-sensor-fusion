@@ -1,14 +1,16 @@
+## Done
 * computation time of ekfslam increases with number of landmarks
 * jcbb takes a long time
     * Slight map misalignment can slow it down to a halt
-* ekf has a tendency to become overoptimistic
 * lots of the landmarks that are registered are cars!
-    * they are constantly moving, thereby breaking the landmark assumptions
+    * (TODO?): they are constantly moving, thereby breaking the landmark assumptions
     * we add all unassociated measurements as new landmarks and never remove any again
-
-* It is known that in the limit of SLAM, all x-coordinates and all y-coordinates become fully correlated (Dissanayake et al. 2001). https://jinyongjeong.github.io/images/post/SLAM/lec09_SEIF_SLAM/SEIF.pdf
 * PDAF can be used to better reject clutter measurements
     * IPDA has a concept of target existance, i.e. we can let spurious landmarks "die"
+
+## Todo
+* ekf has a tendency to become overoptimistic
+* It is known that in the limit of SLAM, all x-coordinates and all y-coordinates become fully correlated (Dissanayake et al. 2001). https://jinyongjeong.github.io/images/post/SLAM/lec09_SEIF_SLAM/SEIF.pdf
 
 * Way to improve both consistency and computational cost of EKF-SLAM: local maps
     * "The use of local maps has been demonstrated to be useful in these situations, reducing computational cost and improving map consistency."
