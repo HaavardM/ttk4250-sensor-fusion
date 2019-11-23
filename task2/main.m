@@ -8,3 +8,4 @@ showplt_nees = true;
 showplt_boxplot = false;
 %% Run
 run_INS_simulated;
+run_INS_real;
