@@ -253,7 +253,8 @@ if any(gnss_diff_plot_mask)
         fig = figure("visible", "off");
     end
     clf;
-    scatter(timeGps(timeGps < timeOdo(N)), gnss_err, '.');
+    err_time = timeGps(timeGps < timeOdo(N));
+    scatter(err_time(1:numel(gnss_err)), gnss_err, '.');
     if gnss_diff_plot_mask(2)
         printplot(fig, "a3-real-gnss-diff.pdf");
     end
