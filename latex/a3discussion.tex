@@ -1,33 +1,32 @@
 \subsection{Discussion}
 \subsubsection{Computational Performance of EKF-SLAM}
-EKF-SLAM has been criticised for a variety of reasons in the literature, and one of the issues often brought up is computational performance as the map grows. Keeping the computation time down is of paramount importance in the online SLAM problem where delayed updates are not acceptable. In fact, each timestep of EKF-SLAM has a computational complexity of $\mathcal{O}(n^2)$ in the number of detected landmarks\cite{divideandconq}, something our implementation confirms. When tuned to provoke lots of landmark detections (around 800), the update step of the Kalman filter takes quadratic time, as shown in figure \ref{fig:update_time_landmarks}. These results show that in large environments, EKF-SLAM alone fails to meet the time-requirements for online SLAM.
+EKF-SLAM has been criticised for a variety of reasons in the literature, and one of the issues often brought up is computational performance as the map grows. Keeping the computation time down is of paramount importance in the online SLAM problem where delayed updates are not acceptable. In fact, each timestep of EKF-SLAM has a computational complexity of $\mathcal{O}(n^2)$ in the number of detected landmarks\cite{divideandconq}, something our implementation confirms. When tuned to provoke lots of landmark detections (around 800), the update step of the Kalman filter takes quadratic time, as shown in figure \ref{fig:a3-update_time_landmarks}. These results show that in large environments, EKF-SLAM alone fails to meet the time-requirements for online SLAM.
+
 \begin{figure}
     \centering
     \begin{subfigure}{0.45\textwidth}
         \includegraphics[width=\textwidth]{plots/a3/update-time-vs-landmarks}
         \caption{Update time vs landmarks}
-        \label{fig:update_time_landmarks}
-    \end{subfigure}%
-~
+        \label{fig:a3-update_time_landmarks}
+    \end{subfigure}
     \begin{subfigure}{0.45\textwidth}
         \includegraphics[width=\textwidth]{plots/a3-real-results-bg}
         \caption{Trajectory overlayed Google Maps}
-        \label{fig:results_bg}
+        \label{fig:a3-real-results_bg}
     \end{subfigure}
     \begin{subfigure}{0.45\textwidth}
         \includegraphics[width=\textwidth]{plots/a3-real-nis}
-        \caption{Update time vs landmarks}
-        \label{fig:update_time_landmarks}
-    \end{subfigure}%
-~
+        \caption{NIS}
+        \label{fig:a3-real-nis}
+    \end{subfigure}
     \begin{subfigure}{0.45\textwidth}
         \includegraphics[width=\textwidth]{plots/a3-real-gnss-diff}
-        \caption{Trajectory overlayed Google Maps}
-        \label{fig:results_bg}
-    \end{subfigure
+        \caption{SLAM vs GNSS}
+        \label{fig:a3-real-gnss-diff}
+    \end{subfigure}
+    
     \caption{Victoria Park results}
 \end{figure}
-
 \subsubsection{Measurement Clutter}
 After a successful run of the EKF-SLAM algorithm on the Victoria Park dataset, we typically find around 300 landmarks. For this reason, we have speculated that not all these landmarks correspond to actual trees, even though that is what they are supposed to represent. One of the reasons for this is landmarks being doubly registered due to the JCBB algorithm not making the proper associations. But another reason that must not be overlooked is the effect of clutter in the measurement data. The laser data in the dataset has been processed to only contain measurements that match a certain tree-profile\cite{victoria}, however no classification algorithm is perfect and we speculate that a lot of the measurements are spurious and should be regarded as clutter. This partly stems from the fact that a lot of the detected landmarks happen to appear inside the six-lane intersection to the east of Victoria Park, as can be seen in figure \ref{fig:results_bg}. In our experiments, the effect of clutter has not been significant, and spuriously detected landmarks have not had a noticeable impact on SLAM performance. It might however become problematic for longer operation times and larger maps. Keeping the number of landmarks down is essential to successfully apply EKF-SLAM in an online situation. In addition, wrongly registered landmarks might lead to spurious associations in the future and ultimately worsen the tracking performance. In our implementation, all unassociated measurements are initialized as new landmarks and never face the possibility of removal, there are however techniques to remove landmarks which have low probability of corresponding to an actual real life feature. One possibility would be to employ something akin to the IPDA mentioned in \ref{sec:a1} since it has a concept of target existance that in a SLAM context could be used to discriminate false landmarks.
 
