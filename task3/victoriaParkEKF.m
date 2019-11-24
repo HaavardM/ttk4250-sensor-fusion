@@ -41,17 +41,17 @@ doAsso = true;
 doLAdd = true; % Add new landmarks
 
 % the SLAM parameters
-sigmas = [4e-2 , 4e-2, 2e-2];
+sigmas = [4.5e-1 , 4.5e-1, 5e-2];
 CorrCoeff = [1, 0, 0; 0, 1, 0.9; 0, 0.9, 1];
 Q = diag(sigmas) * CorrCoeff * diag(sigmas); % (a bit at least) emprically found, feel free to change
 
-R = diag([1e-2, 1e-2]);
+R = diag([5.5e-2, 5.5e-2].^2);
 
-JCBBalphas = [1e-5, 1e-3]; % first is for joint compatibility, second is individual 
+JCBBalphas = [0.001, 0.001]; % first is for joint compatibility, second is individual 
 sensorOffset = [car.a + car.L; car.b];
 
 % initialize TWEAK THESE TO BETTER BE ABLE TO COMPARE TO GPS
-init_angle = 37;
+init_angle = 44;
 init_offset_x = -1;
 init_offset_y = 0;
 P = zeros(3,3); % we say that we start knowing where we are in our own local coordinates
