@@ -12,7 +12,7 @@ A normal IMM filter was developed according to chapter 6 in \cite{edmund} and wa
 
 When updating the IMM conditional on each possible measurement association we get a new mixture model from the IMM with $M$ components. The total mixture model for the IMM-PDAF after one iteration (assuming single gaussian input) is therefore a mixture model with $(N+1)M$ components where $N$ is the number of gated measurements and $M$ is the number of models. This will again continue to grow for each timestep as new measurements will create additional components.
 
-We therefore want to reduce the number of components by conditioning the association probabilities on the mode probabilities. Further we reduce the mixture for each mode to a single gaussian component using equations (6.18) and (6.20) from \cite{edmund}. The association probabilities conditioned on the mode are used as weights.
+We therefore want to reduce the number of components by conditioning the association probabilities on the mode probabilities. Further we reduce the mixture for each mode to a single gaussian component using equation (6.18) and (6.20) from \cite{edmund}. The association probabilities conditioned on the mode are used as weights.
 
 
 
