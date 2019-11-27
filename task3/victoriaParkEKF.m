@@ -181,6 +181,8 @@ if any(results_bg_plot_mask)
     impos_y = [315 -167];
     implot = image(I, 'XData', impos_x, 'YData', impos_y);
     uistack(implot, 'bottom');
+    ylabel('[m]');
+    xlabel('[m]');
     if results_bg_plot_mask(2)
         printplot(fig, "a3-real-results-bg.pdf");
     end
@@ -220,6 +222,8 @@ if any(nis_plot_mask)
     line([1, numel(NISmk)],[1,1], 'Color', 'red', 'LineStyle', '--')
     line([1, numel(NISmk)],[0,0], 'Color', 'red', 'LineStyle', '--')
     insideCI = round(100*mean((0 <= NISmk).* (NISmk <= 1))); % NIS scaled to be between 0 and 1
+    ylabel('Normalized NIS');
+    xlabel('Timestep');
     title(sprintf("NIS divided by chi2 upper bound (%d percent inside 95-CI)", insideCI));
     if nis_plot_mask(2)
         printplot(fig, "a3-real-nis.pdf");
@@ -255,6 +259,8 @@ if any(gnss_diff_plot_mask)
     clf;
     err_time = timeGps(timeGps < timeOdo(N));
     scatter(err_time(1:numel(gnss_err)), gnss_err, '.');
+    ylabel('Difference [m]');
+    xlabel('Timestep');
     if gnss_diff_plot_mask(2)
         printplot(fig, "a3-real-gnss-diff.pdf");
     end

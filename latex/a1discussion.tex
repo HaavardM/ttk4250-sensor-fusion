@@ -8,9 +8,9 @@ We tried the much simpler CV and CT PDAF models to solve the tracking problem an
 
 \subsubsection{Interpreting the gate size} \label{sec:imm-pdaf-gate-size}
 While tuning the filters we did not provide an interpretation of the $gateSize$ parameter. The gated measurments are given by 
-$$v^\intercal S^{-1} v \leq gateSize$$ where $v$ is the innovation and $S$ is the innovation covariance.
+$$v^\intercal S^{-1} v \leq gateSize = g^2$$ where $v$ is the innovation and $S$ is the innovation covariance.
 Since $v$ is gaussian we also know that 
-$$v^\intercal S^{-1} v \leq \chi_k^2(p)$$ where $\chi_k^2(p)$ is the quantile function for the chi-squared distribution\cite{wiki:multivariate_normal}. In other words the $gateSize$ is the upper limit for a $\chi^2$ confidence interval and tells us that there is less than $1-p$ chance for a true measurments to exist outside the gate. For our choice of $gateSize = 5^2$ we have that the probability of throwing away true measurments is less than $3.7267*10^{-4}\%$.
+$$v^\intercal S^{-1} v \leq \chi_k^2(p)$$ where $\chi_k^2(p)$ is the quantile function for the chi-squared distribution where $k$ is the degrees of freedom\cite{wiki:multivariate_normal}. In other words the $gateSize$ is the upper limit for a $\chi^2$ confidence interval and tells us that there is less than $1-p$ chance for a true measurments to exist outside the gate. For our choice of $gateSize = 5^2$ we have that the probability of throwing away good measurments is less than $3.7267*10^{-4}\%$. The $gateSize$ can also be interpreted as the number of standard deviations $\sigma$ for the innovation we want to include in our gate confidence intervals, and  $g \geq 3\sigma$ and $\dim{v} = k \leq 3$ makes the probability of loosing a true measurments neglible.\cite{edmund} Between $3\sigma$ and $5\sigma$ seems to work well for tracking purposes.
 
 \subsubsection{Further Extending the IMM-PDAF}
 Our implementation of the IMM-PDAF currently assumes that a target exists, but such a target may in reality disappear from the field of view of the radar at some point. If we loose track with our current IMM-PDAF we would continue to track using only our model and random clutter. A natural extension to the IMM-PDAF is therefore to include the probability of target existence using the IPDA method discussed in \cite{imm-ipda}.
